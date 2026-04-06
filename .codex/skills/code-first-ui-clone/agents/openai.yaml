@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code-First UI Clone"
+  short_description: "Clone UI from real DOM/CSS, not screenshot guessing"
+  default_prompt: "Inspect target page DOM and CSS first, then replicate source-backed styles in the current project."
