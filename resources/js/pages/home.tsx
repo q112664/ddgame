@@ -2,11 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowRight, Eye, Heart, Menu, MessageCircle, Moon, Sun, X } from 'lucide-react';
 import { useState } from 'react';
 import type { SyntheticEvent } from 'react';
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,8 +32,12 @@ import { useAppearance } from '@/hooks/use-appearance';
 import type { Appearance } from '@/hooks/use-appearance';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
-import { dashboard, home, login, register } from '@/routes';
+import { edit as editProfile } from '@/routes/profile';
 import type { User } from '@/types';
+
+const HOME_HREF = '/';
+const LOGIN_HREF = '/login';
+const REGISTER_HREF = '/register';
 
 const navItems = [
     {
@@ -231,7 +231,7 @@ function TopicCardItem({
             href={href}
             className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-200 hover:bg-primary/5 dark:hover:bg-primary/10 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-            <div className="relative h-48 overflow-hidden leading-none">
+            <div className="relative h-44 overflow-hidden leading-none">
                 <img
                     src={thumbnail}
                     alt={title}
@@ -346,7 +346,7 @@ function UserDropdownMenu({
                     className="inline-flex rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                     <span className="sr-only">打开用户菜单</span>
-                    <Avatar>
+                    <Avatar className="bg-muted">
                         <AvatarImage
                             src={user.avatar}
                             alt={user.name}
@@ -378,7 +378,7 @@ export default function Home() {
 
             <div className="min-h-screen bg-background">
                 <header className="border-b border-border bg-card">
-                    <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
+                    <div className="mx-auto flex h-14 w-full max-w-[1280px] items-center justify-between px-4">
                         <div className="flex items-center gap-2.5">
                             <div className="md:hidden">
                                 <Sheet>
@@ -399,7 +399,7 @@ export default function Home() {
                                         className="gap-0 p-0"
                                     >
                                         <SheetHeader className="gap-0 border-b p-0">
-                                            <div className="flex h-16 items-center justify-between px-5">
+                                            <div className="flex h-14 items-center justify-between px-5">
                                                 <SheetTitle className="text-base font-semibold tracking-[0.18em]">
                                                     ACGzone
                                                 </SheetTitle>
@@ -443,8 +443,8 @@ export default function Home() {
                                                             asChild
                                                             className="h-11 w-full rounded-xl"
                                                         >
-                                                            <Link href={dashboard()}>
-                                                                控制台
+                                                            <Link href={editProfile()}>
+                                                                账号设置
                                                                 <ArrowRight />
                                                             </Link>
                                                         </Button>
@@ -457,7 +457,7 @@ export default function Home() {
                                                                 variant="outline"
                                                                 className="h-11 w-full rounded-xl"
                                                             >
-                                                                <Link href={login()}>
+                                                                <Link href={LOGIN_HREF}>
                                                                     登录
                                                                 </Link>
                                                             </Button>
@@ -467,7 +467,7 @@ export default function Home() {
                                                                 asChild
                                                                 className="h-11 w-full rounded-xl"
                                                             >
-                                                                <Link href={register()}>
+                                                                <Link href={REGISTER_HREF}>
                                                                     注册
                                                                 </Link>
                                                             </Button>
@@ -480,7 +480,7 @@ export default function Home() {
                                 </Sheet>
                             </div>
 
-                            <Link href={home()} className="font-semibold tracking-[0.18em]">
+                            <Link href={HOME_HREF} className="font-semibold tracking-[0.18em]">
                                 ACGzone
                             </Link>
 
@@ -510,10 +510,10 @@ export default function Home() {
                             ) : (
                                 <>
                                     <Button asChild>
-                                        <Link href={login()}>登录</Link>
+                                        <Link href={LOGIN_HREF}>登录</Link>
                                     </Button>
                                     <Button asChild>
-                                        <Link href={register()}>注册</Link>
+                                        <Link href={REGISTER_HREF}>注册</Link>
                                     </Button>
                                 </>
                             )}
@@ -526,12 +526,12 @@ export default function Home() {
                     </div>
                 </header>
 
-                <main className="mx-auto w-full max-w-6xl px-2 py-4 sm:px-4 sm:py-6">
+                <main className="mx-auto w-full max-w-[1280px] px-2 py-4 sm:px-4 sm:py-6">
                     <section
                         id="overview"
                         className="space-y-4"
                     >
-                        <div className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        <div className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-4">
                             {topicCards.map((card) => (
                                 <TopicCardItem
                                     key={card.title}
@@ -543,7 +543,7 @@ export default function Home() {
                 </main>
 
                 <footer className="border-t border-border bg-card/60">
-                    <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 text-sm text-muted-foreground">
+                    <div className="mx-auto flex h-14 w-full max-w-[1280px] items-center justify-between px-4 text-sm text-muted-foreground">
                         <span>© {new Date().getFullYear()} ACGzone</span>
                         <span>All rights reserved.</span>
                     </div>

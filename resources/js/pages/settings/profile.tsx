@@ -1,13 +1,19 @@
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { edit } from '@/routes/profile';
+import { useInitials } from '@/hooks/use-initials';
+import type { User } from '@/types';
 import { send } from '@/routes/verification';
 
 export default function Profile({
@@ -17,41 +23,150 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
-    const { auth } = usePage().props;
+    const {
+        auth: { user },
+    } = usePage<{ auth: { user: User } }>().props;
+    const getInitials = useInitials();
+    const avatarInputRef = useRef<HTMLInputElement>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(
+        user.avatar ?? null,
+    );
+    const [selectedAvatarName, setSelectedAvatarName] = useState<string | null>(
+        null,
+    );
+
+    useEffect(() => {
+        setAvatarPreview(user.avatar ?? null);
+        setSelectedAvatarName(null);
+    }, [user.avatar]);
+
+    const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+
+        if (file === undefined) {
+            setAvatarPreview(user.avatar ?? null);
+            setSelectedAvatarName(null);
+
+            return;
+        }
+
+        setSelectedAvatarName(file.name);
+
+        const objectUrl = URL.createObjectURL(file);
+        setAvatarPreview((currentPreview) => {
+            if (
+                currentPreview !== null &&
+                currentPreview.startsWith('blob:')
+            ) {
+                URL.revokeObjectURL(currentPreview);
+            }
+
+            return objectUrl;
+        });
+    };
+
+    useEffect(() => {
+        return () => {
+            if (avatarPreview !== null && avatarPreview.startsWith('blob:')) {
+                URL.revokeObjectURL(avatarPreview);
+            }
+        };
+    }, [avatarPreview]);
 
     return (
         <>
-            <Head title="Profile settings" />
+            <Head title="个人资料" />
 
-            <h1 className="sr-only">Profile settings</h1>
+            <h1 className="sr-only">个人资料设置</h1>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
                 <Heading
                     variant="small"
-                    title="Profile information"
-                    description="Update your name and email address"
+                    title="个人资料"
+                    description="更新你的昵称、邮箱以及基础账号信息。"
                 />
 
                 <Form
-                    {...ProfileController.update.form()}
+                    action="/settings/profile"
+                    method="post"
                     options={{
                         preserveScroll: true,
                     }}
+                    encType="multipart/form-data"
                     className="space-y-6"
                 >
                     {({ processing, recentlySuccessful, errors }) => (
                         <>
+                            <input
+                                type="hidden"
+                                name="_method"
+                                value="patch"
+                            />
+
+                            <div className="grid gap-3">
+                                <Label htmlFor="avatar">头像</Label>
+
+                                <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                                    <Avatar
+                                        className="!size-[72px] bg-muted sm:!size-20"
+                                    >
+                                        <AvatarImage
+                                            src={avatarPreview ?? undefined}
+                                            alt={user.name}
+                                        />
+                                        <AvatarFallback className="text-base font-medium">
+                                            {getInitials(user.name)}
+                                        </AvatarFallback>
+                                    </Avatar>
+
+                                    <div className="flex min-h-[72px] flex-1 flex-col justify-center gap-3 sm:min-h-20">
+                                        <input
+                                            ref={avatarInputRef}
+                                            id="avatar"
+                                            type="file"
+                                            name="avatar"
+                                            accept="image/*"
+                                            onChange={handleAvatarChange}
+                                            className="hidden"
+                                        />
+
+                                        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="h-9 rounded-md border-border/80 bg-background px-3.5 shadow-none hover:bg-muted"
+                                                onClick={() =>
+                                                    avatarInputRef.current?.click()
+                                                }
+                                            >
+                                                更换头像
+                                            </Button>
+
+                                            <span className="text-sm text-muted-foreground">
+                                                {selectedAvatarName ?? '未选择新文件'}
+                                            </span>
+                                        </div>
+
+                                        <p className="text-sm leading-6 text-muted-foreground">
+                                            支持 JPG、PNG、WEBP 等常见图片格式，单张不超过 2MB。
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <InputError message={errors.avatar} />
+                            </div>
+
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
+                                <Label htmlFor="name">昵称</Label>
 
                                 <Input
                                     id="name"
                                     className="mt-1 block w-full"
-                                    defaultValue={auth.user.name}
+                                    defaultValue={user.name}
                                     name="name"
                                     required
                                     autoComplete="name"
-                                    placeholder="Full name"
+                                    placeholder="请输入昵称"
                                 />
 
                                 <InputError
@@ -61,17 +176,17 @@ export default function Profile({
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">邮箱地址</Label>
 
                                 <Input
                                     id="email"
                                     type="email"
                                     className="mt-1 block w-full"
-                                    defaultValue={auth.user.email}
+                                    defaultValue={user.email}
                                     name="email"
                                     required
                                     autoComplete="username"
-                                    placeholder="Email address"
+                                    placeholder="请输入邮箱地址"
                                 />
 
                                 <InputError
@@ -81,25 +196,23 @@ export default function Profile({
                             </div>
 
                             {mustVerifyEmail &&
-                                auth.user.email_verified_at === null && (
-                                    <div>
-                                        <p className="-mt-4 text-sm text-muted-foreground">
-                                            Your email address is unverified.{' '}
+                                user.email_verified_at === null && (
+                                    <div className="rounded-xl border border-border bg-muted/50 p-4">
+                                        <p className="text-sm text-muted-foreground">
+                                            你的邮箱地址尚未验证。{' '}
                                             <Link
                                                 href={send()}
                                                 as="button"
-                                                className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                                                className="text-foreground underline decoration-border underline-offset-4 transition-colors duration-300 ease-out hover:text-primary"
                                             >
-                                                Click here to resend the
-                                                verification email.
+                                                点击这里重新发送验证邮件。
                                             </Link>
                                         </p>
 
                                         {status ===
                                             'verification-link-sent' && (
-                                            <div className="mt-2 text-sm font-medium text-green-600">
-                                                A new verification link has been
-                                                sent to your email address.
+                                            <div className="mt-2 text-sm font-medium text-primary">
+                                                新的验证链接已经发送到你的邮箱。
                                             </div>
                                         )}
                                     </div>
@@ -110,7 +223,7 @@ export default function Profile({
                                     disabled={processing}
                                     data-test="update-profile-button"
                                 >
-                                    Save
+                                    保存
                                 </Button>
 
                                 <Transition
@@ -120,8 +233,8 @@ export default function Profile({
                                     leave="transition ease-in-out"
                                     leaveTo="opacity-0"
                                 >
-                                    <p className="text-sm text-neutral-600">
-                                        Saved
+                                    <p className="text-sm text-muted-foreground">
+                                        已保存
                                     </p>
                                 </Transition>
                             </div>
@@ -134,12 +247,3 @@ export default function Profile({
         </>
     );
 }
-
-Profile.layout = {
-    breadcrumbs: [
-        {
-            title: 'Profile settings',
-            href: edit(),
-        },
-    ],
-};

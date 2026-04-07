@@ -11,7 +11,6 @@ import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
-import { edit } from '@/routes/security';
 import { disable, enable } from '@/routes/two-factor';
 
 type Props = {
@@ -52,17 +51,16 @@ export default function Security({
 
     return (
         <>
-            <Head title="Security settings" />
+            <Head title="安全设置" />
 
-            <h1 className="sr-only">Security settings</h1>
+            <h1 className="sr-only">安全设置</h1>
 
-            <div className="space-y-6">
+            <section className="space-y-7">
                 <Heading
                     variant="small"
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
+                    title="修改密码"
+                    description="使用高强度密码保护你的账号安全。"
                 />
-
                 <Form
                     {...SecurityController.update.form()}
                     options={{
@@ -89,7 +87,7 @@ export default function Security({
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="current_password">
-                                    Current password
+                                    当前密码
                                 </Label>
 
                                 <PasswordInput
@@ -98,14 +96,14 @@ export default function Security({
                                     name="current_password"
                                     className="mt-1 block w-full"
                                     autoComplete="current-password"
-                                    placeholder="Current password"
+                                    placeholder="请输入当前密码"
                                 />
 
                                 <InputError message={errors.current_password} />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">New password</Label>
+                                <Label htmlFor="password">新密码</Label>
 
                                 <PasswordInput
                                     id="password"
@@ -113,7 +111,7 @@ export default function Security({
                                     name="password"
                                     className="mt-1 block w-full"
                                     autoComplete="new-password"
-                                    placeholder="New password"
+                                    placeholder="请输入新密码"
                                 />
 
                                 <InputError message={errors.password} />
@@ -121,7 +119,7 @@ export default function Security({
 
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">
-                                    Confirm password
+                                    确认密码
                                 </Label>
 
                                 <PasswordInput
@@ -129,7 +127,7 @@ export default function Security({
                                     name="password_confirmation"
                                     className="mt-1 block w-full"
                                     autoComplete="new-password"
-                                    placeholder="Confirm password"
+                                    placeholder="请再次输入新密码"
                                 />
 
                                 <InputError
@@ -142,7 +140,7 @@ export default function Security({
                                     disabled={processing}
                                     data-test="update-password-button"
                                 >
-                                    Save password
+                                    保存密码
                                 </Button>
 
                                 <Transition
@@ -152,29 +150,27 @@ export default function Security({
                                     leave="transition ease-in-out"
                                     leaveTo="opacity-0"
                                 >
-                                    <p className="text-sm text-neutral-600">
-                                        Saved
+                                    <p className="text-sm text-muted-foreground">
+                                        已保存
                                     </p>
                                 </Transition>
                             </div>
                         </>
                     )}
                 </Form>
-            </div>
+            </section>
 
             {canManageTwoFactor && (
-                <div className="space-y-6">
+                <section className="space-y-6 pt-8">
                     <Heading
                         variant="small"
-                        title="Two-factor authentication"
-                        description="Manage your two-factor authentication settings"
+                        title="双重验证"
+                        description="启用或关闭两步验证，提升账号安全性。"
                     />
                     {twoFactorEnabled ? (
                         <div className="flex flex-col items-start justify-start space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                You will be prompted for a secure, random pin
-                                during login, which you can retrieve from the
-                                TOTP-supported application on your phone.
+                                登录时系统会要求你输入一次性验证码，你可以在手机上的 TOTP 验证器应用中获取该验证码。
                             </p>
 
                             <div className="relative inline">
@@ -185,7 +181,7 @@ export default function Security({
                                             type="submit"
                                             disabled={processing}
                                         >
-                                            Disable 2FA
+                                            关闭双重验证
                                         </Button>
                                     )}
                                 </Form>
@@ -200,21 +196,18 @@ export default function Security({
                     ) : (
                         <div className="flex flex-col items-start justify-start space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                When you enable two-factor authentication, you
-                                will be prompted for a secure pin during login.
-                                This pin can be retrieved from a TOTP-supported
-                                application on your phone.
+                                启用双重验证后，登录时你需要额外输入一次性验证码。验证码可通过手机上的 TOTP 验证器应用获取。
                             </p>
 
                             <div>
                                 {hasSetupData ? (
-                                    <Button
-                                        onClick={() => setShowSetupModal(true)}
-                                    >
-                                        <ShieldCheck />
-                                        Continue setup
-                                    </Button>
-                                ) : (
+                                        <Button
+                                            onClick={() => setShowSetupModal(true)}
+                                        >
+                                            <ShieldCheck />
+                                            继续设置
+                                        </Button>
+                                    ) : (
                                     <Form
                                         {...enable.form()}
                                         onSuccess={() =>
@@ -222,41 +215,34 @@ export default function Security({
                                         }
                                     >
                                         {({ processing }) => (
-                                            <Button
-                                                type="submit"
-                                                disabled={processing}
-                                            >
-                                                Enable 2FA
-                                            </Button>
-                                        )}
-                                    </Form>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={processing}
+                                                >
+                                                    启用双重验证
+                                                </Button>
+                                            )}
+                                        </Form>
                                 )}
                             </div>
                         </div>
                     )}
+                </section>
+            )}
 
-                    <TwoFactorSetupModal
-                        isOpen={showSetupModal}
-                        onClose={() => setShowSetupModal(false)}
-                        requiresConfirmation={requiresConfirmation}
-                        twoFactorEnabled={twoFactorEnabled}
-                        qrCodeSvg={qrCodeSvg}
-                        manualSetupKey={manualSetupKey}
-                        clearSetupData={clearSetupData}
-                        fetchSetupData={fetchSetupData}
-                        errors={errors}
-                    />
-                </div>
+            {canManageTwoFactor && (
+                <TwoFactorSetupModal
+                    isOpen={showSetupModal}
+                    onClose={() => setShowSetupModal(false)}
+                    requiresConfirmation={requiresConfirmation}
+                    twoFactorEnabled={twoFactorEnabled}
+                    qrCodeSvg={qrCodeSvg}
+                    manualSetupKey={manualSetupKey}
+                    clearSetupData={clearSetupData}
+                    fetchSetupData={fetchSetupData}
+                    errors={errors}
+                />
             )}
         </>
     );
 }
-
-Security.layout = {
-    breadcrumbs: [
-        {
-            title: 'Security settings',
-            href: edit(),
-        },
-    ],
-};

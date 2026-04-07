@@ -7,8 +7,8 @@ Route::inertia('/', 'home', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+Route::middleware(['auth'])->group(function () {
+    Route::get('dashboard', fn () => to_route('profile.edit'))->name('dashboard');
 });
 
 require __DIR__.'/settings.php';
