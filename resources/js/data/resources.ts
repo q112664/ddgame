@@ -1,3 +1,5 @@
+import type { ResourceCategoryColor } from '@/lib/resource-category-colors';
+
 export type ResourceAccent = 'blue' | 'pink' | 'rose' | 'indigo' | 'green';
 
 export type ResourceEntry = {
@@ -7,13 +9,15 @@ export type ResourceEntry = {
     originalTitle: string;
     thumbnail: string;
     category: string;
+    categoryColor: ResourceCategoryColor;
     accent: ResourceAccent;
     platform: string;
     tags: string[];
     stats: {
         views: string;
+        downloads: string;
         likes: string;
-        replies: string;
+        comments: string;
     };
     author: string;
     time: string;
@@ -40,10 +44,11 @@ export const resources: ResourceEntry[] = [
         thumbnail:
             'https://shionlib.com/_next/image?url=https%3A%2F%2Ft.shionlib.com%2Fgame%2F10662%2Fcover%2F76ab00d4-c987-4cdf-90a6-041e14f7a1b4.webp&w=3840&q=75',
         category: '本月新作',
+        categoryColor: 'sky',
         accent: 'blue',
         platform: 'PC',
         tags: ['Galgame', '全年龄', 'NTR', 'FD', '校园'],
-        stats: { views: '本月新作', likes: 'PC', replies: 'MAGES.' },
+        stats: { views: '18.4k', downloads: '5.2k', likes: '2.1k', comments: '386' },
         author: 'MAGES.',
         time: '本月新作',
         releaseDate: '2026',
@@ -68,10 +73,11 @@ export const resources: ResourceEntry[] = [
         thumbnail:
             'https://shionlib.com/_next/image?url=https%3A%2F%2Ft.shionlib.com%2Fgame%2F9897%2Fcover%2F0573d2f9-334f-4f2a-b2ab-6fdbd3fcca10.webp&w=3840&q=75',
         category: '本月新作',
+        categoryColor: 'sky',
         accent: 'pink',
         platform: 'PC',
         tags: ['Galgame', '游戏', 'AVG', '全年龄'],
-        stats: { views: '本月新作', likes: 'PC', replies: '零创游戏' },
+        stats: { views: '22.8k', downloads: '8.4k', likes: '3.7k', comments: '512' },
         author: '零创游戏',
         time: '本月新作',
         releaseDate: '2026',
@@ -97,10 +103,11 @@ export const resources: ResourceEntry[] = [
         thumbnail:
             'https://shionlib.com/_next/image?url=https%3A%2F%2Ft.shionlib.com%2Fgame%2F11103%2Fcover%2Fccadf9f4-906e-4de8-a24b-5794fc58a789.webp&w=3840&q=75',
         category: '本月新作',
+        categoryColor: 'sky',
         accent: 'rose',
         platform: 'PC',
         tags: ['Galgame', '游戏', '拔作', 'AVG'],
-        stats: { views: '本月新作', likes: 'PC', replies: 'Lusterise' },
+        stats: { views: '14.6k', downloads: '4.9k', likes: '1.8k', comments: '274' },
         author: 'Lusterise',
         time: '本月新作',
         releaseDate: '2026',
@@ -126,10 +133,11 @@ export const resources: ResourceEntry[] = [
         thumbnail:
             'https://shionlib.com/_next/image?url=https%3A%2F%2Ft.shionlib.com%2Fgame%2F10817%2Fcover%2Fa7ec62ef-3941-4414-81b9-bddb2c79f547.webp&w=3840&q=75',
         category: '本月新作',
+        categoryColor: 'sky',
         accent: 'pink',
         platform: 'PC',
         tags: ['Galgame', '游戏', 'GAL', '2026'],
-        stats: { views: '本月新作', likes: 'PC', replies: 'シルキーズプラス' },
+        stats: { views: '11.9k', downloads: '3.6k', likes: '1.4k', comments: '198' },
         author: 'シルキーズプラス',
         time: '本月新作',
         releaseDate: '2026',
@@ -155,10 +163,11 @@ export const resources: ResourceEntry[] = [
         thumbnail:
             'https://shionlib.com/_next/image?url=https%3A%2F%2Ft.shionlib.com%2Fgame%2F1967%2Fcover%2Fe5d3b430-5dac-432c-a1c0-871fee13d0c0.webp&w=3840&q=75',
         category: '本月新作',
+        categoryColor: 'sky',
         accent: 'indigo',
         platform: 'PC',
         tags: ['galgame', '游戏', 'adv', '悬疑'],
-        stats: { views: '本月新作', likes: 'PC', replies: 'Liar-soft' },
+        stats: { views: '9.7k', downloads: '2.8k', likes: '1.1k', comments: '143' },
         author: 'Liar-soft',
         time: '本月新作',
         releaseDate: '2026',
@@ -183,10 +192,11 @@ export const resources: ResourceEntry[] = [
         thumbnail:
             'https://shionlib.com/_next/image?url=https%3A%2F%2Ft.shionlib.com%2Fgame%2F1096%2Fcover%2F51f3f4e4-4bb0-4a54-b88b-eb0291215c85.webp&w=3840&q=75',
         category: '最近更新',
+        categoryColor: 'emerald',
         accent: 'green',
         platform: 'PC',
         tags: ['Galgame', 'ADV', '拔作'],
-        stats: { views: '最近更新', likes: 'PC', replies: 'ぱんみみそふと' },
+        stats: { views: '16.3k', downloads: '6.1k', likes: '2.6k', comments: '341' },
         author: 'ぱんみみそふと',
         time: '最近更新',
         releaseDate: '2026',

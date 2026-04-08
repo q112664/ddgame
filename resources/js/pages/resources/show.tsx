@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import {
     ArrowLeft,
+    Bookmark,
     Download,
     Eye,
     Heart,
@@ -8,6 +9,7 @@ import {
     MessageCircle,
     ScrollText,
 } from 'lucide-react';
+import { useState } from 'react';
 import type { ComponentType } from 'react';
 import {
     Breadcrumb,
@@ -24,16 +26,26 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getResourceById } from '@/data/resources';
 import { useInitials } from '@/hooks/use-initials';
+import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
+import { formatResourceRelativeTime } from '@/lib/resource-time';
 import {
     discussion as discussionRoute,
     downloads as downloadsRoute,
     screenshots as screenshotsRoute,
     show as showRoute,
 } from '@/routes/resources/index';
+import type { FrontendResource } from '@/types';
 
 type ResourceSection = 'details' | 'downloads' | 'screenshots' | 'discussion';
+
+const tagToneClasses = [
+    'border-[color:color-mix(in_oklab,var(--color-chart-1)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-1)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-1)_58%,var(--color-foreground))]',
+    'border-[color:color-mix(in_oklab,var(--color-chart-2)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-2)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-2)_58%,var(--color-foreground))]',
+    'border-[color:color-mix(in_oklab,var(--color-chart-3)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-3)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-3)_58%,var(--color-foreground))]',
+    'border-[color:color-mix(in_oklab,var(--color-chart-4)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-4)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-4)_58%,var(--color-foreground))]',
+    'border-[color:color-mix(in_oklab,var(--color-chart-5)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-5)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-5)_58%,var(--color-foreground))]',
+] as const;
 
 const sectionMeta: Record<
     ResourceSection,
@@ -66,39 +78,42 @@ const sectionMeta: Record<
 };
 
 export default function ResourceShow({
-    id,
+    resource,
+    slug,
     section = 'details',
 }: {
-    id: string;
+    resource: FrontendResource | null;
+    slug: string;
     section?: ResourceSection;
 }) {
-    const resource = getResourceById(id);
     const getInitials = useInitials();
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
     const currentSection = sectionMeta[section] ? section : 'details';
-    const displayMetric = (value: string) =>
-        /\d/.test(value) ? value : '—';
+    const currentSlug = resource?.slug ?? slug;
+    const relativeTime = resource ? formatResourceRelativeTime(resource.publishedAt) : '—';
     const tabItems = [
         {
             value: 'details' as const,
-            href: showRoute({ id }),
+            href: showRoute({ slug: currentSlug }),
             icon: ScrollText,
             label: '详情',
         },
         {
             value: 'downloads' as const,
-            href: downloadsRoute({ id }),
+            href: downloadsRoute({ slug: currentSlug }),
             icon: Download,
             label: '下载',
         },
         {
             value: 'screenshots' as const,
-            href: screenshotsRoute({ id }),
+            href: screenshotsRoute({ slug: currentSlug }),
             icon: ImageIcon,
             label: '截图',
         },
         {
             value: 'discussion' as const,
-            href: discussionRoute({ id }),
+            href: discussionRoute({ slug: currentSlug }),
             icon: MessageCircle,
             label: '讨论',
         },
@@ -114,7 +129,7 @@ export default function ResourceShow({
                         资源不存在
                     </h1>
                     <p className="text-sm leading-6 text-muted-foreground">
-                        当前资源未找到，可能已被移除，或者这个 ID 还没有接入演示数据。
+                        当前资源未找到，可能已被移除，或者这个 Slug 还没有接入后台数据。
                     </p>
                     <Button asChild>
                         <Link href="/">
@@ -150,40 +165,82 @@ export default function ResourceShow({
 
                 <article className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
                     <div className="flex flex-col lg:flex-row">
-                        <div className="lg:h-[300px] lg:w-[400px] lg:shrink-0">
+                        <div className="relative aspect-[16/10] overflow-hidden bg-muted sm:aspect-[16/9] lg:min-h-[288px] lg:w-[400px] lg:shrink-0 lg:self-stretch lg:aspect-auto">
                             <img
                                 src={resource.thumbnail}
                                 alt={resource.title}
-                                className="h-64 w-full object-cover lg:h-full"
+                                className="h-full w-full object-cover lg:absolute lg:inset-0 lg:h-full"
                             />
                         </div>
 
-                        <div className="flex min-w-0 flex-1 flex-col p-6 sm:p-8">
-                            <div className="space-y-3">
-                                <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                                    {resource.title}
-                                </h2>
-                                <p className="text-base text-muted-foreground">
-                                    {resource.originalTitle} · {resource.subtitle}
-                                </p>
-                                <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
+                            <div className="flex min-h-full flex-col justify-center gap-3 sm:gap-3.5">
+                                <div className="space-y-1.5 sm:space-y-2">
+                                    <h2 className="text-xl leading-tight font-semibold tracking-tight text-foreground sm:text-3xl">
+                                        {resource.title}
+                                    </h2>
+                                    <p className="text-sm leading-5 text-muted-foreground sm:text-base sm:leading-6">
+                                        {resource.author} · {relativeTime}
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                                     <Badge
                                         variant="secondary"
-                                        className="h-8 rounded-full border border-primary/15 bg-primary/10 px-3.5 text-[13px] font-semibold tracking-[0.01em] text-primary"
+                                        className={`h-7 rounded-full border px-2.5 text-[13px] font-medium tracking-[0.01em] sm:h-8 sm:text-sm ${getResourceCategoryBadgeToneClass(resource.categoryColor)}`}
                                     >
                                         {resource.category}
                                     </Badge>
-                                    {resource.tags.map((tag) => (
+                                    {resource.tags.map((tag, index) => (
                                         <Badge
                                             key={tag}
                                             variant="outline"
-                                            className="h-8 rounded-full border-border/60 bg-muted/55 px-3.5 text-[13px] font-medium text-foreground/75"
+                                            className={`h-7 rounded-full border px-2.5 text-[13px] font-medium sm:h-8 sm:text-sm ${tagToneClasses[index % tagToneClasses.length]}`}
                                         >
                                             {tag}
                                         </Badge>
                                     ))}
                                 </div>
-                                <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pt-2 text-sm text-muted-foreground">
+
+                                <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                                    <Button
+                                        asChild
+                                        className="h-9 w-full rounded-md px-2.5 text-sm sm:w-auto sm:px-3.5"
+                                    >
+                                        <Link href={downloadsRoute({ slug: currentSlug })}>
+                                            <Download className="size-3.5" />
+                                            下载
+                                        </Link>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="h-9 w-full rounded-md border-border/70 bg-background/80 px-2.5 text-sm shadow-none transition-colors hover:bg-muted sm:w-auto sm:px-3.5"
+                                        aria-pressed={isFavorite}
+                                        onClick={() => setIsFavorite((current) => !current)}
+                                    >
+                                        <Bookmark
+                                            className={`size-3.5 ${isFavorite ? 'fill-current text-primary' : ''}`}
+                                        />
+                                        {isFavorite ? '已收藏' : '收藏'}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="h-9 w-full rounded-md border-border/70 bg-background/80 px-2.5 text-sm shadow-none transition-colors hover:bg-muted sm:w-auto sm:px-3.5"
+                                        aria-pressed={isLiked}
+                                        onClick={() => setIsLiked((current) => !current)}
+                                    >
+                                        <Heart
+                                            className={`size-3.5 ${isLiked ? 'fill-current text-primary' : ''}`}
+                                        />
+                                        {isLiked ? '已点赞' : '点赞'}
+                                    </Button>
+                                </div>
+
+                                <div className="border-t border-border/70" />
+
+                                <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-5 sm:gap-y-2">
                                     <div className="flex items-center gap-2">
                                         <Avatar className="size-8 border border-border bg-muted">
                                             <AvatarFallback className="bg-transparent text-xs font-medium text-foreground/80">
@@ -194,13 +251,13 @@ export default function ResourceShow({
                                             {resource.author}
                                         </span>
                                         <span>·</span>
-                                        <span>{resource.time}</span>
+                                        <span>{relativeTime}</span>
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
+                                    <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 text-[13px] sm:w-auto">
                                         <span className="inline-flex items-center gap-1.5">
                                             <Eye className="size-4" />
-                                            {displayMetric(resource.stats.views)}
+                                            —
                                         </span>
                                         <span className="inline-flex items-center gap-1.5">
                                             <Download className="size-4" />
@@ -208,11 +265,11 @@ export default function ResourceShow({
                                         </span>
                                         <span className="inline-flex items-center gap-1.5">
                                             <Heart className="size-4" />
-                                            {displayMetric(resource.stats.likes)}
+                                            —
                                         </span>
                                         <span className="inline-flex items-center gap-1.5">
                                             <MessageCircle className="size-4" />
-                                            {displayMetric(resource.stats.replies)}
+                                            —
                                         </span>
                                     </div>
                                 </div>

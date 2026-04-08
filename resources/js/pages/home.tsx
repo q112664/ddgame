@@ -1,7 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowRight, Eye, Heart, Menu, MessageCircle, Moon, Sun, X } from 'lucide-react';
-import { useState } from 'react';
-import type { SyntheticEvent } from 'react';
+import { ArrowRight, Menu, Moon, Sun, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,13 +26,15 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { UserMenuContent } from '@/components/user-menu-content';
-import { getResourceHref, resources, type ResourceEntry } from '@/data/resources';
 import { useAppearance } from '@/hooks/use-appearance';
 import type { Appearance } from '@/hooks/use-appearance';
 import { useInitials } from '@/hooks/use-initials';
+import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
+import { formatResourceRelativeTime } from '@/lib/resource-time';
 import { cn } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile/index';
-import type { User } from '@/types';
+import { show as showResource } from '@/routes/resources/index';
+import type { FrontendResource, User } from '@/types';
 
 const HOME_HREF = '/';
 const LOGIN_HREF = '/login';
@@ -58,30 +58,13 @@ const navItems = [
     },
 ] as const;
 
-const accentStyles = {
-    blue: {
-        category: 'bg-blue-100 text-blue-700 ring-blue-200 dark:bg-blue-500/15 dark:text-blue-200 dark:ring-blue-400/20',
-        tag: 'bg-blue-50 text-blue-700 ring-blue-200/70 dark:bg-blue-500/10 dark:text-blue-100 dark:ring-blue-400/20',
-    },
-    pink: {
-        category: 'bg-fuchsia-100 text-fuchsia-700 ring-fuchsia-200 dark:bg-fuchsia-500/15 dark:text-fuchsia-100 dark:ring-fuchsia-400/20',
-        tag: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200/70 dark:bg-fuchsia-500/10 dark:text-fuchsia-100 dark:ring-fuchsia-400/20',
-    },
-    rose: {
-        category: 'bg-rose-100 text-rose-700 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-100 dark:ring-rose-400/20',
-        tag: 'bg-rose-50 text-rose-700 ring-rose-200/70 dark:bg-rose-500/10 dark:text-rose-100 dark:ring-rose-400/20',
-    },
-    indigo: {
-        category: 'bg-indigo-100 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-100 dark:ring-indigo-400/20',
-        tag: 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-500/10 dark:text-slate-200 dark:ring-slate-400/20',
-    },
-    green: {
-        category: 'bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-100 dark:ring-emerald-400/20',
-        tag: 'bg-emerald-50 text-emerald-700 ring-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-100 dark:ring-emerald-400/20',
-    },
-} as const;
-
-type TopicCard = ResourceEntry & { href: string };
+const tagToneClasses = [
+    'bg-blue-50 text-blue-700 ring-blue-200/70 dark:bg-blue-500/10 dark:text-blue-100 dark:ring-blue-400/20',
+    'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200/70 dark:bg-fuchsia-500/10 dark:text-fuchsia-100 dark:ring-fuchsia-400/20',
+    'bg-rose-50 text-rose-700 ring-rose-200/70 dark:bg-rose-500/10 dark:text-rose-100 dark:ring-rose-400/20',
+    'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-500/10 dark:text-slate-200 dark:ring-slate-400/20',
+    'bg-emerald-50 text-emerald-700 ring-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-100 dark:ring-emerald-400/20',
+] as const;
 
 function TopicBadge({
     children,
@@ -104,63 +87,21 @@ function TopicBadge({
 }
 
 function TopicCardItem({
+    slug,
     title,
-    href,
     thumbnail,
     category,
-    accent,
+    categoryColor,
     tags,
-    stats,
     author,
-    time,
-}: TopicCard) {
-    const styles = accentStyles[accent];
+    publishedAt,
+}: FrontendResource) {
     const getInitials = useInitials();
-    const [overlayStrength, setOverlayStrength] = useState(0.42);
-
-    const handleThumbnailLoad = (event: SyntheticEvent<HTMLImageElement>) => {
-        const image = event.currentTarget;
-        const canvas = document.createElement('canvas');
-        const sampleSize = 24;
-
-        canvas.width = sampleSize;
-        canvas.height = sampleSize;
-
-        const context = canvas.getContext('2d', { willReadFrequently: true });
-
-        if (!context) {
-            return;
-        }
-
-        try {
-            context.drawImage(image, 0, 0, sampleSize, sampleSize);
-            const { data } = context.getImageData(0, 0, sampleSize, sampleSize);
-
-            let luminanceTotal = 0;
-            const pixelCount = data.length / 4;
-
-            for (let i = 0; i < data.length; i += 4) {
-                const red = data[i] / 255;
-                const green = data[i + 1] / 255;
-                const blue = data[i + 2] / 255;
-                luminanceTotal += 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-            }
-
-            const averageLuminance = luminanceTotal / pixelCount;
-            const dynamicStrength = 0.24 + averageLuminance * 0.34;
-            setOverlayStrength(Number(dynamicStrength.toFixed(3)));
-        } catch {
-            setOverlayStrength(0.42);
-        }
-    };
-
-    const midStrength = Math.max(0, overlayStrength - 0.16);
-    const upperStrength = Math.max(0, overlayStrength - 0.3);
-    const topStrength = Math.max(0, overlayStrength - 0.38);
+    const relativeTime = formatResourceRelativeTime(publishedAt);
 
     return (
         <Link
-            href={href}
+            href={showResource({ slug })}
             className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-200 hover:bg-primary/5 dark:hover:bg-primary/10 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
             <div className="relative h-44 overflow-hidden leading-none">
@@ -168,33 +109,8 @@ function TopicCardItem({
                     src={thumbnail}
                     alt={title}
                     loading="lazy"
-                    onLoad={handleThumbnailLoad}
                     className="block h-full w-full object-cover"
                 />
-
-                <div
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
-                    style={{
-                        backgroundImage: `linear-gradient(to top, rgba(0,0,0,${overlayStrength}) 0%, rgba(0,0,0,${midStrength}) 28%, rgba(0,0,0,${upperStrength}) 52%, rgba(0,0,0,${topStrength}) 72%, transparent 100%)`,
-                    }}
-                />
-
-                <div className="absolute inset-x-0 bottom-0 px-3 pb-2.5">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-white/95 drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
-                        <span className="inline-flex items-center gap-1.5">
-                            <Eye className="size-3.5" />
-                            {stats.views}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5">
-                            <Heart className="size-3.5" />
-                            {stats.likes}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5">
-                            <MessageCircle className="size-3.5" />
-                            {stats.replies}
-                        </span>
-                    </div>
-                </div>
             </div>
 
             <div className="flex flex-1 flex-col gap-2 p-3">
@@ -204,11 +120,14 @@ function TopicCardItem({
                     </h2>
 
                     <div className="flex flex-wrap gap-1.5">
-                        <TopicBadge className={styles.category}>{category}</TopicBadge>
-                        {tags.map((tag) => (
+                        <TopicBadge className={getResourceCategoryBadgeToneClass(categoryColor)}>
+                            {category}
+                        </TopicBadge>
+
+                        {tags.map((tag, index) => (
                             <TopicBadge
                                 key={tag}
-                                className={styles.tag}
+                                className={tagToneClasses[index % tagToneClasses.length]}
                             >
                                 {tag}
                             </TopicBadge>
@@ -228,7 +147,7 @@ function TopicCardItem({
                         <div className="flex flex-wrap items-center gap-1 text-[13px] text-muted-foreground">
                             <span className="font-medium text-foreground/85">{author}</span>
                             <span>·</span>
-                            <span>{time}</span>
+                            <span>{relativeTime}</span>
                         </div>
                     </div>
                 </div>
@@ -302,7 +221,8 @@ function UserDropdownMenu({
 export default function Home() {
     const {
         auth: { user },
-    } = usePage<{ auth: { user: User | null } }>().props;
+        resources,
+    } = usePage<{ auth: { user: User | null }; resources: FrontendResource[] }>().props;
 
     return (
         <>
@@ -464,13 +384,7 @@ export default function Home() {
                         className="space-y-4"
                     >
                         <div className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-4">
-                            {resources.map((card) => (
-                                <TopicCardItem
-                                    key={card.id}
-                                    {...card}
-                                    href={getResourceHref(card.id)}
-                                />
-                            ))}
+                            {resources.map((resource) => <TopicCardItem key={resource.slug} {...resource} />)}
                         </div>
                     </section>
                 </main>

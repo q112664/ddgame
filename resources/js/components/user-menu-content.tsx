@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, LogOut, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -32,6 +32,18 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+                {user.email === 'admin@admin.com' && (
+                    <DropdownMenuItem asChild>
+                        <a
+                            className="block w-full cursor-pointer"
+                            href="/admin"
+                            onClick={cleanup}
+                        >
+                            <LayoutDashboard className="mr-2" />
+                            后台管理
+                        </a>
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full cursor-pointer"
