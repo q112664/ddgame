@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes/index';
-import { store } from '@/routes/register';
+import { store } from '@/routes/register/index';
 
 export default function Register() {
     return (

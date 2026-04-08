@@ -28,11 +28,12 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { UserMenuContent } from '@/components/user-menu-content';
+import { getResourceHref, resources, type ResourceEntry } from '@/data/resources';
 import { useAppearance } from '@/hooks/use-appearance';
 import type { Appearance } from '@/hooks/use-appearance';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
-import { edit as editProfile } from '@/routes/profile';
+import { edit as editProfile } from '@/routes/profile/index';
 import type { User } from '@/types';
 
 const HOME_HREF = '/';
@@ -54,75 +55,6 @@ const navItems = [
         label: '状态',
         href: '#status',
         description: '用于展示当前里程碑和进度的区域。',
-    },
-] as const;
-
-const topicCards = [
-    {
-        title: '大家的 galgame 入坑历程是怎么样的（好奇）',
-        href: '/topic/3342',
-        thumbnail: 'https://shionlib.com/_next/image?url=https%3A%2F%2Ft.shionlib.com%2Fgame%2F972%2Fcover%2F33732c4c-6a10-468d-ba67-9047065f97d4.webp&w=384&q=75',
-        category: '闲聊',
-        accent: 'blue',
-        tags: ['文章', '闲聊', '水贴'],
-        stats: { views: '333', likes: '7', replies: '10' },
-        author: '言语枫秋',
-        time: '29 分钟前',
-    },
-    {
-        title: '能尽量快且免费地下载几乎所有二次元资源的导航（4.5 更新备用提示）',
-        href: '/topic/3340',
-        thumbnail: 'https://t.shionlib.com/game/9897/cover/ac518d01-bc2a-4ba4-9c86-2638ba39dd70.webp',
-        category: '动画',
-        accent: 'pink',
-        tags: ['音乐', '轻小说', '资源', '漫画', 'galgame'],
-        stats: { views: '2.2w', likes: '168', replies: '65' },
-        author: 'uoht',
-        time: '1 小时前',
-    },
-    {
-        title: '向站友们征集自兑鼠标垫图案',
-        href: '/topic/3294',
-        thumbnail: 'https://t.shionlib.com/game/11103/cover/ccadf9f4-906e-4de8-a24b-5794fc58a789.webp',
-        category: '日常',
-        accent: 'rose',
-        tags: ['鼠标垫', 'galgame'],
-        stats: { views: '290', likes: '1', replies: '2' },
-        author: '战争之马',
-        time: '5 小时前',
-    },
-    {
-        title: 'B 站坠机的一年',
-        href: '/topic/3335',
-        thumbnail: 'https://t.shionlib.com/game/10817/cover/a7ec62ef-3941-4414-81b9-bddb2c79f547.webp',
-        category: '日常',
-        accent: 'pink',
-        tags: ['哔哩哔哩'],
-        stats: { views: '738', likes: '16', replies: '5' },
-        author: 'aurora',
-        time: '5 小时前',
-    },
-    {
-        title: '不要相信这些发资源的 UP 主！和资源！新诈骗简介群诈骗我已经机',
-        href: '/topic/3287',
-        thumbnail: 'https://t.shionlib.com/game/1967/cover/e5d3b430-5dac-432c-a1c0-871fee13d0c0.webp',
-        category: '投票话题',
-        accent: 'indigo',
-        tags: ['日常', '其它', '资源', '萌新', '警惕', '引流', '假药', '失信'],
-        stats: { views: '1.0w', likes: '44', replies: '45' },
-        author: '舞释',
-        time: '16 小时前',
-    },
-    {
-        title: '似乎注册的时候会有问题……',
-        href: '/topic/3346',
-        thumbnail: 'https://t.shionlib.com/game/1947/cover/ae6660ad-f3fd-410a-a7da-929dc9d6bbcf.webp',
-        category: '其它',
-        accent: 'green',
-        tags: ['注册'],
-        stats: { views: '129', likes: '1', replies: '0' },
-        author: 'es_123_xk',
-        time: '19 小时前',
     },
 ] as const;
 
@@ -149,7 +81,7 @@ const accentStyles = {
     },
 } as const;
 
-type TopicCard = (typeof topicCards)[number];
+type TopicCard = ResourceEntry & { href: string };
 
 function TopicBadge({
     children,
@@ -227,7 +159,7 @@ function TopicCardItem({
     const topStrength = Math.max(0, overlayStrength - 0.38);
 
     return (
-        <a
+        <Link
             href={href}
             className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-200 hover:bg-primary/5 dark:hover:bg-primary/10 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
@@ -301,7 +233,7 @@ function TopicCardItem({
                     </div>
                 </div>
             </div>
-        </a>
+        </Link>
     );
 }
 
@@ -532,10 +464,11 @@ export default function Home() {
                         className="space-y-4"
                     >
                         <div className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-4">
-                            {topicCards.map((card) => (
+                            {resources.map((card) => (
                                 <TopicCardItem
-                                    key={card.title}
+                                    key={card.id}
                                     {...card}
+                                    href={getResourceHref(card.id)}
                                 />
                             ))}
                         </div>

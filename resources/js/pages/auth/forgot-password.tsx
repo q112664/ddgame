@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { login } from '@/routes/index';
-import { email } from '@/routes/password';
+import { email } from '@/routes/password/index';
 
 export default function ForgotPassword({ status }: { status?: string }) {
     return (

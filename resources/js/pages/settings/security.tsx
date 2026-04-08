@@ -11,7 +11,7 @@ import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
-import { disable, enable } from '@/routes/two-factor';
+import { disable, enable } from '@/routes/two-factor/index';
 
 type Props = {
     canManageTwoFactor?: boolean;

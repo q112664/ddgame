@@ -3,9 +3,9 @@ import { Palette, ShieldCheck, UserRound } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { toUrl } from '@/lib/utils';
-import { edit as editAppearance } from '@/routes/appearance';
-import { edit as editProfile } from '@/routes/profile';
-import { edit as editSecurity } from '@/routes/security';
+import { edit as editAppearance } from '@/routes/appearance/index';
+import { edit as editProfile } from '@/routes/profile/index';
+import { edit as editSecurity } from '@/routes/security/index';
 
 const navItems = [
     {
@@ -49,7 +49,7 @@ export default function FrontSettingsLayout({
                 className="gap-0"
             >
                 <TabsList
-                    className="h-auto w-full flex-wrap justify-start"
+                    className="h-auto w-full justify-start"
                     aria-label="前台设置导航"
                 >
                     {navItems.map((item) => (
@@ -71,7 +71,7 @@ export default function FrontSettingsLayout({
                 </TabsList>
             </Tabs>
 
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6 lg:p-8">
+            <div className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6 lg:p-8">
                 {children}
             </div>
         </div>

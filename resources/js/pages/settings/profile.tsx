@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInitials } from '@/hooks/use-initials';
 import type { User } from '@/types';
-import { send } from '@/routes/verification';
+import { send } from '@/routes/verification/index';
 
 export default function Profile({
     mustVerifyEmail,

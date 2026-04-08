@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
-import { edit as profileEdit } from '@/routes/profile';
+import { edit as profileEdit } from '@/routes/profile/index';
 
 export default function Dashboard() {
     return (

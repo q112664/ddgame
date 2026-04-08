@@ -32,7 +32,7 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useAppearance } from '@/hooks/use-appearance';
 import type { Appearance } from '@/hooks/use-appearance';
 import { useInitials } from '@/hooks/use-initials';
-import { edit as editProfile } from '@/routes/profile';
+import { edit as editProfile } from '@/routes/profile/index';
 import type { User } from '@/types';
 
 const HOME_HREF = '/';
@@ -192,13 +192,11 @@ export default function FrontSiteLayout({
                                             <Separator />
                                             {user ? (
                                                 <SheetClose asChild>
-                                                    <Button
-                                                        asChild
-                                                        className="h-11 w-full rounded-xl"
-                                                    >
-                                                        <Link
-                                                            href={editProfile()}
+                                                        <Button
+                                                            asChild
+                                                            className="h-11 w-full rounded-xl"
                                                         >
+                                                        <Link href={editProfile()}>
                                                             账号设置
                                                             <ArrowRight />
                                                         </Link>
