@@ -32,7 +32,7 @@ class ResourceResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with('category')
+            ->with(['categories', 'author', 'tags'])
             ->latest('published_at');
     }
 

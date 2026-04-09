@@ -20,11 +20,11 @@ class ResourceInfolist
                     ->label('标题'),
                 TextEntry::make('slug')
                     ->label('Slug'),
-                TextEntry::make('category.name')
+                TextEntry::make('categories.name')
                     ->label('分类'),
-                TextEntry::make('author_name')
+                TextEntry::make('author.name')
                     ->label('作者'),
-                TextEntry::make('tags')
+                TextEntry::make('tags.name')
                     ->label('标签')
                     ->badge()
                     ->separator(','),

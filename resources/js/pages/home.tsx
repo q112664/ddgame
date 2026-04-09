@@ -90,8 +90,7 @@ function TopicCardItem({
     slug,
     title,
     thumbnail,
-    category,
-    categoryColor,
+    categories,
     tags,
     author,
     publishedAt,
@@ -120,9 +119,14 @@ function TopicCardItem({
                     </h2>
 
                     <div className="flex flex-wrap gap-1.5">
-                        <TopicBadge className={getResourceCategoryBadgeToneClass(categoryColor)}>
-                            {category}
-                        </TopicBadge>
+                        {categories.map((category) => (
+                            <TopicBadge
+                                key={category.name}
+                                className={getResourceCategoryBadgeToneClass(category.color)}
+                            >
+                                {category.name}
+                            </TopicBadge>
+                        ))}
 
                         {tags.map((tag, index) => (
                             <TopicBadge

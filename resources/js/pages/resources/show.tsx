@@ -185,12 +185,15 @@ export default function ResourceShow({
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                                    <Badge
-                                        variant="secondary"
-                                        className={`h-7 rounded-full border px-2.5 text-[13px] font-medium tracking-[0.01em] sm:h-8 sm:text-sm ${getResourceCategoryBadgeToneClass(resource.categoryColor)}`}
-                                    >
-                                        {resource.category}
-                                    </Badge>
+                                    {resource.categories.map((category) => (
+                                        <Badge
+                                            key={category.name}
+                                            variant="secondary"
+                                            className={`h-7 rounded-full border px-2.5 text-[13px] font-medium tracking-[0.01em] sm:h-8 sm:text-sm ${getResourceCategoryBadgeToneClass(category.color)}`}
+                                        >
+                                            {category.name}
+                                        </Badge>
+                                    ))}
                                     {resource.tags.map((tag, index) => (
                                         <Badge
                                             key={tag}

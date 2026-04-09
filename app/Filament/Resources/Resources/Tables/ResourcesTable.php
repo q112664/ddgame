@@ -23,13 +23,14 @@ class ResourcesTable
                     ->label('标题')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('category.name')
+                TextColumn::make('categories.name')
                     ->label('分类')
-                    ->badge(),
-                TextColumn::make('author_name')
+                    ->badge()
+                    ->separator(','),
+                TextColumn::make('author.name')
                     ->label('作者')
                     ->searchable(),
-                TextColumn::make('tags')
+                TextColumn::make('tags.name')
                     ->label('标签')
                     ->badge()
                     ->separator(','),

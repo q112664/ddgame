@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class Resource extends Model
@@ -13,9 +14,7 @@ class Resource extends Model
         'title',
         'slug',
         'thumbnail_path',
-        'resource_category_id',
-        'tags',
-        'author_name',
+        'user_id',
         'published_at',
     ];
 
@@ -30,7 +29,6 @@ class Resource extends Model
     protected function casts(): array
     {
         return [
-            'tags' => 'array',
             'published_at' => 'datetime',
         ];
     }
@@ -40,9 +38,23 @@ class Resource extends Model
         return 'slug';
     }
 
-    public function category(): BelongsTo
+    public function categories(): BelongsToMany
     {
-        return $this->belongsTo(ResourceCategory::class, 'resource_category_id');
+        return $this->belongsToMany(ResourceCategory::class, 'resource_category_resource')
+            ->withTimestamps()
+            ->orderBy('resource_categories.sort_order')
+            ->orderBy('resource_categories.name');
+    }
+
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)
+            ->withTimestamps();
     }
 
     protected function thumbnailUrl(): Attribute

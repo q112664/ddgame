@@ -1,11 +1,15 @@
 import type { ResourceCategoryColor } from '@/lib/resource-category-colors';
 
+export type FrontendResourceCategory = {
+    name: string;
+    color: ResourceCategoryColor;
+};
+
 export type FrontendResource = {
     slug: string;
     thumbnail: string;
     title: string;
-    category: string;
-    categoryColor: ResourceCategoryColor;
+    categories: FrontendResourceCategory[];
     tags: string[];
     author: string;
     publishedAt: string;

@@ -12,17 +12,22 @@ $serializeResource = fn (Resource $resource): array => [
     'slug' => $resource->slug,
     'thumbnail' => $resource->thumbnail_url,
     'title' => $resource->title,
-    'category' => $resource->category->name,
-    'categoryColor' => $resource->category->color?->value ?? 'sky',
-    'tags' => array_values($resource->tags ?? []),
-    'author' => $resource->author_name,
+    'categories' => $resource->categories
+        ->map(fn ($category): array => [
+            'name' => $category->name,
+            'color' => $category->color?->value ?? 'sky',
+        ])
+        ->values()
+        ->all(),
+    'tags' => $resource->tags->pluck('name')->values()->all(),
+    'author' => $resource->author->name,
     'publishedAt' => $resource->published_at?->toIso8601String(),
 ];
 
 Route::get('/', fn () => Inertia::render('home', [
     'canRegister' => Features::enabled(Features::registration()),
     'resources' => Resource::query()
-        ->with('category')
+        ->with(['categories', 'author', 'tags'])
         ->latest('published_at')
         ->get()
         ->map($serializeResource)
@@ -31,7 +36,7 @@ Route::get('/', fn () => Inertia::render('home', [
 
 $renderResource = function (string $slug, string $section = 'details') use ($serializeResource) {
     $resource = Resource::query()
-        ->with('category')
+        ->with(['categories', 'author', 'tags'])
         ->where('slug', $slug)
         ->first();
 

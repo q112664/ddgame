@@ -6,7 +6,7 @@ use App\Support\ResourceCategoryColor;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ResourceCategory extends Model
 {
@@ -36,8 +36,9 @@ class ResourceCategory extends Model
             ->orderBy('name');
     }
 
-    public function resources(): HasMany
+    public function resources(): BelongsToMany
     {
-        return $this->hasMany(Resource::class, 'resource_category_id');
+        return $this->belongsToMany(Resource::class, 'resource_category_resource')
+            ->withTimestamps();
     }
 }
