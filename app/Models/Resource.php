@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ResourceSlug;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,15 @@ class Resource extends Model
      * @var list<string>
      */
     protected $appends = ['thumbnail_url'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $resource): void {
+            if (ResourceSlug::shouldGenerate($resource->slug)) {
+                $resource->slug = ResourceSlug::generateUnique();
+            }
+        });
+    }
 
     /**
      * @return array<string, string>

@@ -12,5 +12,6 @@ export type FrontendResource = {
     categories: FrontendResourceCategory[];
     tags: string[];
     author: string;
+    authorAvatar: string | null;
     publishedAt: string;
 };

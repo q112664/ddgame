@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\ResourceCategories\Schemas;
 
 use App\Support\ResourceCategoryColor;
+use App\Support\ResourceCategorySlug;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Str;
 
 class ResourceCategoryForm
 {
@@ -25,7 +25,7 @@ class ResourceCategoryForm
                             return;
                         }
 
-                        $set('slug', Str::slug($state));
+                        $set('slug', ResourceCategorySlug::generate($state));
                     }),
                 TextInput::make('slug')
                     ->label('Slug')

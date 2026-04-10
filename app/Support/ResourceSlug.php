@@ -2,18 +2,30 @@
 
 namespace App\Support;
 
+use App\Models\Resource;
 use Illuminate\Support\Str;
 
 class ResourceSlug
 {
-    public static function generate(string $title): string
+    public static function generateUnique(): string
     {
-        $slug = Str::slug($title);
+        do {
+            $slug = Str::random(7);
+        } while (static::slugExists($slug));
 
-        if (filled($slug)) {
-            return $slug;
-        }
+        return $slug;
+    }
 
-        return 'resource-'.substr(md5($title), 0, 10);
+    public static function shouldGenerate(?string $slug): bool
+    {
+        return blank($slug) || ! preg_match('/^[A-Za-z0-9]{7}$/', $slug);
+    }
+
+    protected static function slugExists(string $slug, ?int $ignoreResourceId = null): bool
+    {
+        return Resource::query()
+            ->when($ignoreResourceId !== null, fn ($query) => $query->whereKeyNot($ignoreResourceId))
+            ->where('slug', $slug)
+            ->exists();
     }
 }

@@ -29,11 +29,10 @@ it('renders homepage cards from backend resources', function () {
 
     $resource = Resource::query()->create([
         'title' => '测试资源',
-        'slug' => 'test-resource',
         'thumbnail_path' => 'https://example.com/cover.jpg',
         'user_id' => $author->id,
         'published_at' => '2026-04-08 12:00:00',
-    ]);
+    ])->refresh();
     $tagOne = Tag::query()->create(['name' => '标签一', 'slug' => 'tag-one']);
     $tagTwo = Tag::query()->create(['name' => '标签二', 'slug' => 'tag-two']);
     $resource->categories()->sync([$category->id, $secondaryCategory->id]);
@@ -50,6 +49,7 @@ it('renders homepage cards from backend resources', function () {
             ->where('resources.0.categories.0.color', $category->color->value)
             ->where('resources.0.categories.1.name', $secondaryCategory->name)
             ->where('resources.0.author', $author->name)
+            ->where('resources.0.authorAvatar', null)
             ->where('resources.0.tags.0', '标签一')
         );
 });
@@ -76,11 +76,10 @@ it('renders the resource page header from backend resources', function () {
 
     $resource = Resource::query()->create([
         'title' => '后台资源详情',
-        'slug' => 'backend-resource-show',
         'thumbnail_path' => 'https://example.com/show.jpg',
         'user_id' => $author->id,
         'published_at' => '2026-04-08 08:30:00',
-    ]);
+    ])->refresh();
     $tagOne = Tag::query()->create(['name' => 'Galgame', 'slug' => 'galgame']);
     $tagTwo = Tag::query()->create(['name' => '汉化', 'slug' => 'hanhua']);
     $resource->categories()->sync([$category->id, $secondaryCategory->id]);
@@ -96,6 +95,7 @@ it('renders the resource page header from backend resources', function () {
             ->where('resource.categories.0.name', $category->name)
             ->where('resource.categories.1.name', $secondaryCategory->name)
             ->where('resource.author', $author->name)
+            ->where('resource.authorAvatar', null)
             ->where('resource.tags.1', '汉化')
             ->where('section', 'details')
         );

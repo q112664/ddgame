@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Resources\Schemas;
 use App\Models\ResourceCategory;
 use App\Models\Tag;
 use App\Models\User;
-use App\Support\ResourceSlug;
 use App\Support\TagNameParser;
 use App\Support\TagSlug;
 use Filament\Actions\Action;
@@ -34,19 +33,13 @@ class ResourceForm
                 TextInput::make('title')
                     ->label('标题')
                     ->required()
-                    ->maxLength(255)
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(function (?string $state, callable $set): void {
-                        if (blank($state)) {
-                            return;
-                        }
-
-                        $set('slug', ResourceSlug::generate($state));
-                    }),
+                    ->maxLength(255),
                 TextInput::make('slug')
                     ->label('Slug')
-                    ->required()
                     ->maxLength(255)
+                    ->readOnly()
+                    ->dehydrated()
+                    ->helperText('保存后自动生成 7 位大小写字母数字混合 Slug。')
                     ->unique(ignoreRecord: true),
                 Select::make('categories')
                     ->label('分类')

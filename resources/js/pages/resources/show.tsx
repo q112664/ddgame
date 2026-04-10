@@ -7,6 +7,7 @@ import {
     Heart,
     ImageIcon,
     MessageCircle,
+    Sparkles,
     ScrollText,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -22,6 +23,7 @@ import {
 import {
     Avatar,
     AvatarFallback,
+    AvatarImage,
 } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,13 +41,8 @@ import type { FrontendResource } from '@/types';
 
 type ResourceSection = 'details' | 'downloads' | 'screenshots' | 'discussion';
 
-const tagToneClasses = [
-    'border-[color:color-mix(in_oklab,var(--color-chart-1)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-1)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-1)_58%,var(--color-foreground))]',
-    'border-[color:color-mix(in_oklab,var(--color-chart-2)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-2)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-2)_58%,var(--color-foreground))]',
-    'border-[color:color-mix(in_oklab,var(--color-chart-3)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-3)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-3)_58%,var(--color-foreground))]',
-    'border-[color:color-mix(in_oklab,var(--color-chart-4)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-4)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-4)_58%,var(--color-foreground))]',
-    'border-[color:color-mix(in_oklab,var(--color-chart-5)_24%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-chart-5)_14%,var(--color-background))] text-[color:color-mix(in_oklab,var(--color-chart-5)_58%,var(--color-foreground))]',
-] as const;
+const detailTagToneClass =
+    'border-[#fb7299]/25 bg-[#fb7299]/10 text-[#fb7299] dark:border-[#fb7299]/30 dark:bg-[#fb7299]/14 dark:text-[#ff8fb0]';
 
 const sectionMeta: Record<
     ResourceSection,
@@ -194,15 +191,6 @@ export default function ResourceShow({
                                             {category.name}
                                         </Badge>
                                     ))}
-                                    {resource.tags.map((tag, index) => (
-                                        <Badge
-                                            key={tag}
-                                            variant="outline"
-                                            className={`h-7 rounded-full border px-2.5 text-[13px] font-medium sm:h-8 sm:text-sm ${tagToneClasses[index % tagToneClasses.length]}`}
-                                        >
-                                            {tag}
-                                        </Badge>
-                                    ))}
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
@@ -246,6 +234,10 @@ export default function ResourceShow({
                                 <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-5 sm:gap-y-2">
                                     <div className="flex items-center gap-2">
                                         <Avatar className="size-8 border border-border bg-muted">
+                                            <AvatarImage
+                                                src={resource.authorAvatar ?? undefined}
+                                                alt={resource.author}
+                                            />
                                             <AvatarFallback className="bg-transparent text-xs font-medium text-foreground/80">
                                                 {getInitials(resource.author)}
                                             </AvatarFallback>
@@ -302,9 +294,35 @@ export default function ResourceShow({
                 </Tabs>
 
                 <article className="rounded-xl border border-border bg-card p-6 shadow-xs sm:p-8">
-                    <p className="text-sm leading-6 text-muted-foreground">
-                        {sectionMeta[currentSection].description}
-                    </p>
+                    {currentSection === 'details' ? (
+                        <div className="space-y-5">
+                            <div className="space-y-2">
+                                <h3 className="inline-flex items-center gap-1.5 text-sm font-semibold tracking-tight text-foreground">
+                                    <Sparkles className="size-3.5 text-[#fb7299]" />
+                                    标签
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {resource.tags.map((tag) => (
+                                        <Badge
+                                            key={tag}
+                                            variant="outline"
+                                            className={`h-7 rounded-full border px-2.5 text-[13px] font-medium ${detailTagToneClass}`}
+                                        >
+                                            {tag}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <p className="text-sm leading-6 text-muted-foreground">
+                                {sectionMeta[currentSection].description}
+                            </p>
+                        </div>
+                    ) : (
+                        <p className="text-sm leading-6 text-muted-foreground">
+                            {sectionMeta[currentSection].description}
+                        </p>
+                    )}
                 </article>
             </div>
         </>

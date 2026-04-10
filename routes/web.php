@@ -20,7 +20,8 @@ $serializeResource = fn (Resource $resource): array => [
         ->values()
         ->all(),
     'tags' => $resource->tags->pluck('name')->values()->all(),
-    'author' => $resource->author->name,
+    'author' => $resource->author?->name ?? '未知作者',
+    'authorAvatar' => $resource->author?->avatar,
     'publishedAt' => $resource->published_at?->toIso8601String(),
 ];
 

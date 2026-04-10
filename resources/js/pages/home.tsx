@@ -30,7 +30,6 @@ import { useAppearance } from '@/hooks/use-appearance';
 import type { Appearance } from '@/hooks/use-appearance';
 import { useInitials } from '@/hooks/use-initials';
 import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
-import { formatResourceRelativeTime } from '@/lib/resource-time';
 import { cn } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile/index';
 import { show as showResource } from '@/routes/resources/index';
@@ -91,13 +90,7 @@ function TopicCardItem({
     title,
     thumbnail,
     categories,
-    tags,
-    author,
-    publishedAt,
 }: FrontendResource) {
-    const getInitials = useInitials();
-    const relativeTime = formatResourceRelativeTime(publishedAt);
-
     return (
         <Link
             href={showResource({ slug })}
@@ -127,32 +120,6 @@ function TopicCardItem({
                                 {category.name}
                             </TopicBadge>
                         ))}
-
-                        {tags.map((tag, index) => (
-                            <TopicBadge
-                                key={tag}
-                                className={tagToneClasses[index % tagToneClasses.length]}
-                            >
-                                {tag}
-                            </TopicBadge>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="mt-auto">
-                    <div className="flex items-center gap-2.5 pt-2">
-                        <Avatar className="size-7 ring-1 ring-border">
-                            <AvatarImage alt={author} />
-                            <AvatarFallback className="bg-muted text-[11px] font-semibold text-muted-foreground">
-                                {getInitials(author)}
-                            </AvatarFallback>
-                        </Avatar>
-
-                        <div className="flex flex-wrap items-center gap-1 text-[13px] text-muted-foreground">
-                            <span className="font-medium text-foreground/85">{author}</span>
-                            <span>·</span>
-                            <span>{relativeTime}</span>
-                        </div>
                     </div>
                 </div>
             </div>
