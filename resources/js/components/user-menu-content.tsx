@@ -8,6 +8,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
+import { dashboard as adminDashboard } from '@/routes/filament/admin/pages/index';
+import { logout } from '@/routes/index';
 import { edit } from '@/routes/profile/index';
 import type { User } from '@/types';
 
@@ -36,7 +38,7 @@ export function UserMenuContent({ user }: Props) {
                     <DropdownMenuItem asChild>
                         <a
                             className="block w-full cursor-pointer"
-                            href="/admin"
+                            href={adminDashboard.url()}
                             onClick={cleanup}
                         >
                             <LayoutDashboard className="mr-2" />
@@ -60,8 +62,7 @@ export function UserMenuContent({ user }: Props) {
             <DropdownMenuItem asChild>
                 <Link
                     className="block w-full cursor-pointer"
-                    href="/logout"
-                    method="post"
+                    href={logout()}
                     as="button"
                     onClick={handleLogout}
                     data-test="logout-button"

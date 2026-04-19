@@ -13,6 +13,12 @@ import {
 import { useState } from 'react';
 import type { ComponentType } from 'react';
 import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import {
     Breadcrumb,
     BreadcrumbItem,
     BreadcrumbLink,
@@ -20,17 +26,12 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInitials } from '@/hooks/use-initials';
 import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
 import { formatResourceRelativeTime } from '@/lib/resource-time';
+import { home } from '@/routes/index';
 import {
     discussion as discussionRoute,
     downloads as downloadsRoute,
@@ -129,7 +130,7 @@ export default function ResourceShow({
                         当前资源未找到，可能已被移除，或者这个 Slug 还没有接入后台数据。
                     </p>
                     <Button asChild>
-                        <Link href="/">
+                        <Link href={home()}>
                             <ArrowLeft data-icon="inline-start" />
                             返回首页
                         </Link>
@@ -149,7 +150,7 @@ export default function ResourceShow({
                         <BreadcrumbList>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link href="/">首页</Link>
+                                    <Link href={home()}>首页</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator />

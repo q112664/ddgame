@@ -42,6 +42,8 @@ it('renders homepage cards from backend resources', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('home')
+            ->where('auth.user', null)
+            ->where('sidebarOpen', true)
             ->has('resources', 1)
             ->where('resources.0.slug', $resource->slug)
             ->where('resources.0.title', $resource->title)

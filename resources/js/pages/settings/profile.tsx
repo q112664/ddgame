@@ -1,6 +1,8 @@
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -13,8 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInitials } from '@/hooks/use-initials';
-import type { User } from '@/types';
 import { send } from '@/routes/verification/index';
+import type { User } from '@/types';
 
 export default function Profile({
     mustVerifyEmail,
@@ -28,50 +30,44 @@ export default function Profile({
     } = usePage<{ auth: { user: User } }>().props;
     const getInitials = useInitials();
     const avatarInputRef = useRef<HTMLInputElement>(null);
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(
-        user.avatar ?? null,
-    );
+    const [selectedAvatarPreview, setSelectedAvatarPreview] = useState<string | null>(null);
     const [selectedAvatarName, setSelectedAvatarName] = useState<string | null>(
         null,
     );
-
-    useEffect(() => {
-        setAvatarPreview(user.avatar ?? null);
-        setSelectedAvatarName(null);
-    }, [user.avatar]);
+    const avatarPreview = selectedAvatarPreview ?? user.avatar;
 
     const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
 
         if (file === undefined) {
-            setAvatarPreview(user.avatar ?? null);
+            setSelectedAvatarPreview(null);
             setSelectedAvatarName(null);
 
             return;
         }
 
         setSelectedAvatarName(file.name);
-
-        const objectUrl = URL.createObjectURL(file);
-        setAvatarPreview((currentPreview) => {
-            if (
-                currentPreview !== null &&
-                currentPreview.startsWith('blob:')
-            ) {
-                URL.revokeObjectURL(currentPreview);
-            }
-
-            return objectUrl;
-        });
+        setSelectedAvatarPreview(URL.createObjectURL(file));
     };
 
     useEffect(() => {
+        if (selectedAvatarPreview === null) {
+            return;
+        }
+
         return () => {
-            if (avatarPreview !== null && avatarPreview.startsWith('blob:')) {
-                URL.revokeObjectURL(avatarPreview);
-            }
+            URL.revokeObjectURL(selectedAvatarPreview);
         };
-    }, [avatarPreview]);
+    }, [selectedAvatarPreview]);
+
+    const clearSelectedAvatar = () => {
+        setSelectedAvatarPreview(null);
+        setSelectedAvatarName(null);
+
+        if (avatarInputRef.current !== null) {
+            avatarInputRef.current.value = '';
+        }
+    };
 
     return (
         <>
@@ -87,22 +83,16 @@ export default function Profile({
                 />
 
                 <Form
-                    action="/settings/profile"
-                    method="post"
+                    {...ProfileController.update.form()}
                     options={{
                         preserveScroll: true,
                     }}
+                    onSuccess={clearSelectedAvatar}
                     encType="multipart/form-data"
                     className="space-y-6"
                 >
                     {({ processing, recentlySuccessful, errors }) => (
                         <>
-                            <input
-                                type="hidden"
-                                name="_method"
-                                value="patch"
-                            />
-
                             <div className="grid gap-3">
                                 <Label htmlFor="avatar">头像</Label>
 

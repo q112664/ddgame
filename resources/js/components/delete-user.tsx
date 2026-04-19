@@ -1,5 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { useRef } from 'react';
+import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -51,8 +52,7 @@ export default function DeleteUser() {
                         </DialogDescription>
 
                         <Form
-                            action="/settings/profile"
-                            method="post"
+                            {...ProfileController.destroy.form()}
                             options={{
                                 preserveScroll: true,
                             }}
@@ -62,12 +62,6 @@ export default function DeleteUser() {
                         >
                             {({ resetAndClearErrors, processing, errors }) => (
                                 <>
-                                    <input
-                                        type="hidden"
-                                        name="_method"
-                                        value="delete"
-                                    />
-
                                     <div className="grid gap-2">
                                         <Label
                                             htmlFor="password"
