@@ -251,7 +251,11 @@ export default function FrontSiteShell({
                             <UserDropdownMenu user={user} />
                         ) : (
                             <>
-                                <Button asChild>
+                                <Button
+                                    asChild
+                                    variant="ghost"
+                                    className="text-muted-foreground hover:text-foreground"
+                                >
                                     <Link href={login()}>登录</Link>
                                 </Button>
                                 <Button asChild>
