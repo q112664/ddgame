@@ -27,9 +27,6 @@ class ResourcesTable
                     ->label('分类')
                     ->badge()
                     ->separator(','),
-                TextColumn::make('author.name')
-                    ->label('作者')
-                    ->searchable(),
                 TextColumn::make('tags.name')
                     ->label('标签')
                     ->badge()
@@ -38,9 +35,6 @@ class ResourcesTable
                     ->label('发布时间')
                     ->dateTime()
                     ->sortable(),
-                TextColumn::make('slug')
-                    ->label('Slug')
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

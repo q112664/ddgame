@@ -78,9 +78,11 @@ it('renders the resource page header from backend resources', function () {
 
     $resource = Resource::query()->create([
         'title' => '后台资源详情',
+        'subtitle' => '这是一个更轻量的资源副标题。',
         'thumbnail_path' => 'https://example.com/show.jpg',
         'user_id' => $author->id,
         'published_at' => '2026-04-08 08:30:00',
+        'content' => '<p>这里是后台填写的资源详情。</p>',
     ])->refresh();
     $tagOne = Tag::query()->create(['name' => 'Galgame', 'slug' => 'galgame']);
     $tagTwo = Tag::query()->create(['name' => '汉化', 'slug' => 'hanhua']);
@@ -94,11 +96,18 @@ it('renders the resource page header from backend resources', function () {
             ->where('slug', $resource->slug)
             ->where('resource.slug', $resource->slug)
             ->where('resource.title', $resource->title)
+            ->where('resource.subtitle', '这是一个更轻量的资源副标题。')
             ->where('resource.categories.0.name', $category->name)
             ->where('resource.categories.1.name', $secondaryCategory->name)
             ->where('resource.author', $author->name)
             ->where('resource.authorAvatar', null)
             ->where('resource.tags.1', '汉化')
+            ->where('resource.content', '<p>这里是后台填写的资源详情。</p>')
+            ->where('resource.viewCount', 1)
+            ->where('resource.favoriteCount', 0)
+            ->where('resource.favoritedByCurrentUser', false)
             ->where('section', 'details')
         );
+
+    expect($resource->fresh()->view_count)->toBe(1);
 });
