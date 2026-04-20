@@ -1,11 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ArrowRight, Menu, Moon, Sun, X } from 'lucide-react';
 import type { ReactNode } from 'react';
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from '@/components/ui/avatar';
+import AppLogoIcon from '@/components/app-logo-icon';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -29,18 +26,47 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import {
-    FRONT_SITE_BRAND_NAME,
-    FRONT_SITE_NAV_ITEMS,
-    getFrontSiteSectionHref,
-} from '@/data/front-site-navigation';
 import { useAppearance } from '@/hooks/use-appearance';
 import type { Appearance } from '@/hooks/use-appearance';
 import { useInitials } from '@/hooks/use-initials';
 import { home, login, register } from '@/routes/index';
 import { edit as editProfile } from '@/routes/profile/index';
+import type { Site, SiteNavigationItem } from '@/types';
 import type { User } from '@/types';
 import { UserMenuContent } from './user-menu-content';
+
+function isExternalUrl(url: string): boolean {
+    return /^(https?:\/\/|mailto:|tel:)/i.test(url);
+}
+
+function SiteNavigationLink({
+    item,
+    className,
+    children,
+}: {
+    item: SiteNavigationItem;
+    className?: string;
+    children: ReactNode;
+}) {
+    if (item.openInNewTab || isExternalUrl(item.url)) {
+        return (
+            <a
+                href={item.url}
+                target={item.openInNewTab ? '_blank' : undefined}
+                rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
+                className={className}
+            >
+                {children}
+            </a>
+        );
+    }
+
+    return (
+        <Link href={item.url} className={className}>
+            {children}
+        </Link>
+    );
+}
 
 function ThemeToggleButton() {
     const { appearance, updateAppearance } = useAppearance();
@@ -48,7 +74,13 @@ function ThemeToggleButton() {
     const handleToggle = () => {
         const isDark = document.documentElement.classList.contains('dark');
         const nextAppearance: Appearance =
-            appearance === 'system' ? (isDark ? 'light' : 'dark') : isDark ? 'light' : 'dark';
+            appearance === 'system'
+                ? isDark
+                    ? 'light'
+                    : 'dark'
+                : isDark
+                  ? 'light'
+                  : 'dark';
 
         updateAppearance(nextAppearance);
     };
@@ -61,8 +93,8 @@ function ThemeToggleButton() {
             className="relative text-muted-foreground hover:text-foreground"
             onClick={handleToggle}
         >
-            <Sun className="size-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute size-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <Sun className="size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+            <Moon className="absolute size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
             <span className="sr-only">切换主题</span>
         </Button>
     );
@@ -76,7 +108,7 @@ function UserDropdownMenu({ user }: { user: User }) {
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
-                    className="inline-flex rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="inline-flex rounded-full transition-opacity outline-none hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                     <span className="sr-only">打开用户菜单</span>
                     <Avatar className="bg-muted">
@@ -90,24 +122,23 @@ function UserDropdownMenu({ user }: { user: User }) {
                     </Avatar>
                 </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-                align="end"
-                className="min-w-56"
-            >
+            <DropdownMenuContent align="end" className="min-w-56">
                 <UserMenuContent user={user} />
             </DropdownMenuContent>
         </DropdownMenu>
     );
 }
 
-export default function FrontSiteShell({
-    children,
-}: {
-    children: ReactNode;
-}) {
+export default function FrontSiteShell({ children }: { children: ReactNode }) {
     const {
+        name,
+        site,
         auth: { user },
-    } = usePage<{ auth: { user: User | null } }>().props;
+    } = usePage<{
+        name: string;
+        site: Site;
+        auth: { user: User | null };
+    }>().props;
 
     return (
         <div className="min-h-screen bg-background">
@@ -117,10 +148,7 @@ export default function FrontSiteShell({
                         <div className="md:hidden">
                             <Sheet>
                                 <SheetTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                    >
+                                    <Button variant="ghost" size="icon">
                                         <Menu className="size-5" />
                                         <span className="sr-only">
                                             打开导航菜单
@@ -135,7 +163,7 @@ export default function FrontSiteShell({
                                     <SheetHeader className="gap-0 border-b p-0">
                                         <div className="flex h-14 items-center justify-between px-5">
                                             <SheetTitle className="text-base font-semibold tracking-[0.18em]">
-                                                {FRONT_SITE_BRAND_NAME}
+                                                {name}
                                             </SheetTitle>
                                             <SheetClose asChild>
                                                 <Button
@@ -154,22 +182,26 @@ export default function FrontSiteShell({
 
                                     <div className="flex flex-1 flex-col">
                                         <nav className="flex flex-col gap-1 px-3 py-4">
-                                            {FRONT_SITE_NAV_ITEMS.map((item) => (
-                                                <SheetClose
-                                                    key={item.label}
-                                                    asChild
-                                                >
-                                                    <Button
+                                            {site.navigation.primary.map(
+                                                (item) => (
+                                                    <SheetClose
+                                                        key={`${item.label}-${item.url}`}
                                                         asChild
-                                                        variant="ghost"
-                                                        className="h-11 w-full justify-start rounded-xl px-4 text-[15px] font-medium"
                                                     >
-                                                        <a href={getFrontSiteSectionHref(item.hash)}>
-                                                            {item.label}
-                                                        </a>
-                                                    </Button>
-                                                </SheetClose>
-                                            ))}
+                                                        <Button
+                                                            asChild
+                                                            variant="ghost"
+                                                            className="h-11 w-full justify-start rounded-xl px-4 text-[15px] font-medium"
+                                                        >
+                                                            <SiteNavigationLink
+                                                                item={item}
+                                                            >
+                                                                {item.label}
+                                                            </SiteNavigationLink>
+                                                        </Button>
+                                                    </SheetClose>
+                                                ),
+                                            )}
                                         </nav>
 
                                         <SheetFooter className="mt-auto gap-3 p-3 pt-0">
@@ -180,7 +212,9 @@ export default function FrontSiteShell({
                                                         asChild
                                                         className="h-11 w-full rounded-xl"
                                                     >
-                                                        <Link href={editProfile()}>
+                                                        <Link
+                                                            href={editProfile()}
+                                                        >
                                                             账号设置
                                                             <ArrowRight />
                                                         </Link>
@@ -194,7 +228,9 @@ export default function FrontSiteShell({
                                                             variant="outline"
                                                             className="h-11 w-full rounded-xl"
                                                         >
-                                                            <Link href={login()}>
+                                                            <Link
+                                                                href={login()}
+                                                            >
                                                                 登录
                                                             </Link>
                                                         </Button>
@@ -204,7 +240,9 @@ export default function FrontSiteShell({
                                                             asChild
                                                             className="h-11 w-full rounded-xl"
                                                         >
-                                                            <Link href={register()}>
+                                                            <Link
+                                                                href={register()}
+                                                            >
                                                                 注册
                                                             </Link>
                                                         </Button>
@@ -219,9 +257,12 @@ export default function FrontSiteShell({
 
                         <Link
                             href={home()}
-                            className="font-semibold tracking-[0.18em]"
+                            className="inline-flex items-center gap-2 font-semibold tracking-[0.18em]"
                         >
-                            {FRONT_SITE_BRAND_NAME}
+                            {site.logo ? (
+                                <AppLogoIcon className="size-5 rounded object-contain" />
+                            ) : null}
+                            <span>{name}</span>
                         </Link>
 
                         <NavigationMenu
@@ -229,15 +270,17 @@ export default function FrontSiteShell({
                             className="hidden md:flex"
                         >
                             <NavigationMenuList>
-                                {FRONT_SITE_NAV_ITEMS.map((item) => (
-                                    <NavigationMenuItem key={item.label}>
+                                {site.navigation.primary.map((item) => (
+                                    <NavigationMenuItem
+                                        key={`${item.label}-${item.url}`}
+                                    >
                                         <NavigationMenuLink
                                             asChild
                                             className={navigationMenuTriggerStyle()}
                                         >
-                                            <a href={getFrontSiteSectionHref(item.hash)}>
+                                            <SiteNavigationLink item={item}>
                                                 {item.label}
-                                            </a>
+                                            </SiteNavigationLink>
                                         </NavigationMenuLink>
                                     </NavigationMenuItem>
                                 ))}
@@ -279,7 +322,7 @@ export default function FrontSiteShell({
             <footer className="border-t border-border bg-card/60">
                 <div className="mx-auto flex h-14 w-full max-w-[1280px] items-center justify-between px-4 text-sm text-muted-foreground">
                     <span>
-                        © {new Date().getFullYear()} {FRONT_SITE_BRAND_NAME}
+                        © {new Date().getFullYear()} {name}
                     </span>
                     <span>All rights reserved.</span>
                 </div>

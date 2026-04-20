@@ -13,10 +13,13 @@ class Resource extends Model
 {
     protected $fillable = [
         'title',
+        'subtitle',
         'slug',
         'thumbnail_path',
         'user_id',
         'published_at',
+        'view_count',
+        'content',
     ];
 
     /**
@@ -26,6 +29,12 @@ class Resource extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (self $resource): void {
+            if (blank($resource->published_at)) {
+                $resource->published_at = now();
+            }
+        });
+
         static::saving(function (self $resource): void {
             if (ResourceSlug::shouldGenerate($resource->slug)) {
                 $resource->slug = ResourceSlug::generateUnique();
@@ -40,7 +49,15 @@ class Resource extends Model
     {
         return [
             'published_at' => 'datetime',
+            'view_count' => 'integer',
         ];
+    }
+
+    public function incrementViewCount(): void
+    {
+        static::withoutTimestamps(function (): void {
+            $this->increment('view_count');
+        });
     }
 
     public function getRouteKeyName(): string
@@ -64,6 +81,12 @@ class Resource extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class)
+            ->withTimestamps();
+    }
+
+    public function favoritedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'resource_user_like')
             ->withTimestamps();
     }
 

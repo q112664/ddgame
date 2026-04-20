@@ -4,12 +4,13 @@ namespace App\Filament\Resources\Resources\Schemas;
 
 use App\Models\ResourceCategory;
 use App\Models\Tag;
-use App\Models\User;
 use App\Support\TagNameParser;
 use App\Support\TagSlug;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -34,26 +35,26 @@ class ResourceForm
                     ->label('标题')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('slug')
-                    ->label('Slug')
+                TextInput::make('subtitle')
+                    ->label('副标题')
                     ->maxLength(255)
-                    ->readOnly()
-                    ->dehydrated()
-                    ->helperText('保存后自动生成 7 位大小写字母数字混合 Slug。')
-                    ->unique(ignoreRecord: true),
+                    ->helperText('可选。填写后会显示在前台资源页标题下方。'),
+                DateTimePicker::make('published_at')
+                    ->label('发布时间')
+                    ->default(now())
+                    ->seconds(false)
+                    ->native(false)
+                    ->required()
+                    ->helperText('新建资源时默认使用当前时间，后续编辑时也可以手动调整。'),
+                Hidden::make('user_id')
+                    ->default(fn ($record): ?int => $record?->user_id ?? auth()->id())
+                    ->required()
+                    ->dehydrated(),
                 Select::make('categories')
                     ->label('分类')
                     ->relationship('categories', 'name')
                     ->options(ResourceCategory::query()->ordered()->pluck('name', 'id')->all())
                     ->multiple()
-                    ->searchable()
-                    ->preload()
-                    ->required()
-                    ->native(false),
-                Select::make('user_id')
-                    ->label('作者')
-                    ->relationship('author', 'name')
-                    ->options(User::query()->orderBy('name')->pluck('name', 'id')->all())
                     ->searchable()
                     ->preload()
                     ->required()
@@ -103,10 +104,10 @@ class ResourceForm
                             }),
                     )
                     ->columnSpanFull(),
-                DateTimePicker::make('published_at')
-                    ->label('发布时间')
-                    ->seconds(false)
-                    ->required(),
+                RichEditor::make('content')
+                    ->label('详情内容')
+                    ->helperText('这里填写的富文本内容会显示在前台资源详情页的“详情”Tab。')
+                    ->columnSpanFull(),
             ]);
     }
 

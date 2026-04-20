@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import FrontSiteShell from '@/components/front-site-shell';
 import { home } from '@/routes/index';
@@ -9,6 +9,11 @@ export default function AuthSimpleLayout({
     title,
     description,
 }: AuthLayoutProps) {
+    const { name, site } = usePage<{
+        name: string;
+        site: { logo: string | null };
+    }>().props;
+
     return (
         <FrontSiteShell>
             <div className="flex min-h-[70vh] items-center justify-center py-6 sm:py-10">
@@ -19,9 +24,13 @@ export default function AuthSimpleLayout({
                                 href={home()}
                                 className="flex flex-col items-center gap-2 font-medium"
                             >
-                                <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                                    <AppLogoIcon className="size-9 fill-current text-[var(--foreground)] dark:text-white" />
-                                </div>
+                                {site.logo ? (
+                                    <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
+                                        <AppLogoIcon className="size-9 object-contain" />
+                                    </div>
+                                ) : (
+                                    <span>{name}</span>
+                                )}
                                 <span className="sr-only">{title}</span>
                             </Link>
 

@@ -18,12 +18,12 @@ class ResourceInfolist
                     ->columnSpanFull(),
                 TextEntry::make('title')
                     ->label('标题'),
-                TextEntry::make('slug')
-                    ->label('Slug'),
+                TextEntry::make('subtitle')
+                    ->label('副标题')
+                    ->placeholder('未填写副标题。')
+                    ->columnSpanFull(),
                 TextEntry::make('categories.name')
                     ->label('分类'),
-                TextEntry::make('author.name')
-                    ->label('作者'),
                 TextEntry::make('tags.name')
                     ->label('标签')
                     ->badge()
@@ -31,6 +31,11 @@ class ResourceInfolist
                 TextEntry::make('published_at')
                     ->label('发布时间')
                     ->dateTime(),
+                TextEntry::make('content')
+                    ->label('详情内容')
+                    ->html()
+                    ->placeholder('未填写详情内容。')
+                    ->columnSpanFull(),
                 TextEntry::make('updated_at')
                     ->label('更新时间')
                     ->dateTime(),

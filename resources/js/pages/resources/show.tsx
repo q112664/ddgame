@@ -1,22 +1,16 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
-    Bookmark,
     Download,
     Eye,
     Heart,
     ImageIcon,
     MessageCircle,
-    Sparkles,
     ScrollText,
 } from 'lucide-react';
-import { useState } from 'react';
+import { startTransition, useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
     Breadcrumb,
@@ -27,6 +21,7 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInitials } from '@/hooks/use-initials';
 import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
@@ -35,15 +30,18 @@ import { home } from '@/routes/index';
 import {
     discussion as discussionRoute,
     downloads as downloadsRoute,
+    favorite as favoriteRoute,
     screenshots as screenshotsRoute,
     show as showRoute,
 } from '@/routes/resources/index';
 import type { FrontendResource } from '@/types';
+import type { User } from '@/types';
 
 type ResourceSection = 'details' | 'downloads' | 'screenshots' | 'discussion';
 
 const detailTagToneClass =
     'border-[#fb7299]/25 bg-[#fb7299]/10 text-[#fb7299] dark:border-[#fb7299]/30 dark:bg-[#fb7299]/14 dark:text-[#ff8fb0]';
+const favoriteAuthToastId = 'resource-favorite-auth-required';
 
 const sectionMeta: Record<
     ResourceSection,
@@ -55,22 +53,26 @@ const sectionMeta: Record<
 > = {
     details: {
         title: '详情',
-        description: '详情区域保留结构占位，后续可以继续接资源介绍、参数信息或补充说明。',
+        description:
+            '详情区域保留结构占位，后续可以继续接资源介绍、参数信息或补充说明。',
         icon: ScrollText,
     },
     downloads: {
         title: '下载',
-        description: '下载区域保留结构占位，后续可以继续接资源版本、下载方式或安装说明。',
+        description:
+            '下载区域保留结构占位，后续可以继续接资源版本、下载方式或安装说明。',
         icon: Download,
     },
     screenshots: {
         title: '截图',
-        description: '截图区域保留结构占位，后续可以继续接画廊、预览图或宣传素材。',
+        description:
+            '截图区域保留结构占位，后续可以继续接画廊、预览图或宣传素材。',
         icon: ImageIcon,
     },
     discussion: {
         title: '讨论',
-        description: '讨论区域保留结构占位，后续可以继续接评论、帖子或引用内容。',
+        description:
+            '讨论区域保留结构占位，后续可以继续接评论、帖子或引用内容。',
         icon: MessageCircle,
     },
 };
@@ -84,12 +86,30 @@ export default function ResourceShow({
     slug: string;
     section?: ResourceSection;
 }) {
+    const {
+        auth: { user },
+    } = usePage<{ auth: { user: User | null } }>().props;
     const getInitials = useInitials();
-    const [isFavorite, setIsFavorite] = useState(false);
-    const [isLiked, setIsLiked] = useState(false);
+    const [isFavorited, setIsFavorited] = useState(
+        resource?.favoritedByCurrentUser ?? false,
+    );
+    const [favoriteCount, setFavoriteCount] = useState(
+        resource?.favoriteCount ?? 0,
+    );
+    const [isFavoriting, setIsFavoriting] = useState(false);
     const currentSection = sectionMeta[section] ? section : 'details';
     const currentSlug = resource?.slug ?? slug;
-    const relativeTime = resource ? formatResourceRelativeTime(resource.publishedAt) : '—';
+    const relativeTime = resource
+        ? formatResourceRelativeTime(resource.publishedAt)
+        : '—';
+    const formattedFavoriteCount = new Intl.NumberFormat('zh-CN', {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+    }).format(favoriteCount);
+    const formattedViewCount = new Intl.NumberFormat('zh-CN', {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+    }).format(resource?.viewCount ?? 0);
     const tabItems = [
         {
             value: 'details' as const,
@@ -117,6 +137,58 @@ export default function ResourceShow({
         },
     ];
 
+    useEffect(() => {
+        return router.on('start', () => {
+            toast.dismiss(favoriteAuthToastId);
+        });
+    }, []);
+
+    const handleFavoriteToggle = () => {
+        if (resource === null || isFavoriting) {
+            return;
+        }
+
+        if (user === null) {
+            toast('请先登录后再收藏。', {
+                id: favoriteAuthToastId,
+                description: '登录后可以同步你的收藏记录。',
+            });
+
+            return;
+        }
+
+        const nextFavoritedState = !isFavorited;
+        const nextFavoriteCount = Math.max(
+            0,
+            favoriteCount + (nextFavoritedState ? 1 : -1),
+        );
+
+        setIsFavoriting(true);
+
+        startTransition(() => {
+            setIsFavorited(nextFavoritedState);
+            setFavoriteCount(nextFavoriteCount);
+        });
+
+        router.post(
+            favoriteRoute({ resource: resource.slug }),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () => {
+                    startTransition(() => {
+                        setIsFavorited(!nextFavoritedState);
+                        setFavoriteCount(favoriteCount);
+                    });
+                },
+                onFinish: () => {
+                    setIsFavoriting(false);
+                },
+            },
+        );
+    };
+
     if (resource === null) {
         return (
             <>
@@ -127,7 +199,8 @@ export default function ResourceShow({
                         资源不存在
                     </h1>
                     <p className="text-sm leading-6 text-muted-foreground">
-                        当前资源未找到，可能已被移除，或者这个 Slug 还没有接入后台数据。
+                        当前资源未找到，可能已被移除，或者这个 Slug
+                        还没有接入后台数据。
                     </p>
                     <Button asChild>
                         <Link href={home()}>
@@ -146,16 +219,18 @@ export default function ResourceShow({
 
             <div className="space-y-5 pt-2 pb-4">
                 <div className="pb-1">
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            <BreadcrumbItem>
+                    <Breadcrumb className="overflow-hidden">
+                        <BreadcrumbList className="flex-nowrap overflow-hidden whitespace-nowrap">
+                            <BreadcrumbItem className="shrink-0">
                                 <BreadcrumbLink asChild>
                                     <Link href={home()}>首页</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
-                            <BreadcrumbSeparator />
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>资源页面</BreadcrumbPage>
+                            <BreadcrumbSeparator className="shrink-0" />
+                            <BreadcrumbItem className="min-w-0 shrink overflow-hidden">
+                                <BreadcrumbPage className="block truncate">
+                                    {resource.title}
+                                </BreadcrumbPage>
                             </BreadcrumbItem>
                         </BreadcrumbList>
                     </Breadcrumb>
@@ -163,7 +238,7 @@ export default function ResourceShow({
 
                 <article className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
                     <div className="flex flex-col lg:flex-row">
-                        <div className="relative aspect-[16/10] overflow-hidden bg-muted sm:aspect-[16/9] lg:min-h-[288px] lg:w-[400px] lg:shrink-0 lg:self-stretch lg:aspect-auto">
+                        <div className="relative aspect-[16/10] overflow-hidden bg-muted sm:aspect-[16/9] lg:aspect-auto lg:min-h-[288px] lg:w-[400px] lg:shrink-0 lg:self-stretch">
                             <img
                                 src={resource.thumbnail}
                                 alt={resource.title}
@@ -177,9 +252,11 @@ export default function ResourceShow({
                                     <h2 className="text-xl leading-tight font-semibold tracking-tight text-foreground sm:text-3xl">
                                         {resource.title}
                                     </h2>
-                                    <p className="text-sm leading-5 text-muted-foreground sm:text-base sm:leading-6">
-                                        {resource.author} · {relativeTime}
-                                    </p>
+                                    {resource.subtitle ? (
+                                        <p className="max-w-3xl text-sm leading-6 text-foreground/72 sm:text-[15px]">
+                                            {resource.subtitle}
+                                        </p>
+                                    ) : null}
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -194,12 +271,16 @@ export default function ResourceShow({
                                     ))}
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                                     <Button
                                         asChild
                                         className="h-9 w-full rounded-md px-2.5 text-sm sm:w-auto sm:px-3.5"
                                     >
-                                        <Link href={downloadsRoute({ slug: currentSlug })}>
+                                        <Link
+                                            href={downloadsRoute({
+                                                slug: currentSlug,
+                                            })}
+                                        >
                                             <Download className="size-3.5" />
                                             下载
                                         </Link>
@@ -207,26 +288,21 @@ export default function ResourceShow({
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        className="h-9 w-full rounded-md border-border/70 bg-background/80 px-2.5 text-sm shadow-none transition-colors hover:bg-muted sm:w-auto sm:px-3.5"
-                                        aria-pressed={isFavorite}
-                                        onClick={() => setIsFavorite((current) => !current)}
-                                    >
-                                        <Bookmark
-                                            className={`size-3.5 ${isFavorite ? 'fill-current text-primary' : ''}`}
-                                        />
-                                        {isFavorite ? '已收藏' : '收藏'}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="h-9 w-full rounded-md border-border/70 bg-background/80 px-2.5 text-sm shadow-none transition-colors hover:bg-muted sm:w-auto sm:px-3.5"
-                                        aria-pressed={isLiked}
-                                        onClick={() => setIsLiked((current) => !current)}
+                                        className={`h-9 w-full rounded-md px-2.5 text-sm shadow-none transition-colors sm:w-auto sm:px-3.5 ${
+                                            isFavorited
+                                                ? 'border-[#db2627]/35 bg-[#db2627]/10 text-[#db2627] hover:border-[#db2627]/45 hover:bg-[#db2627]/12 hover:text-[#db2627]'
+                                                : 'border-[#db2627]/20 bg-[#db2627]/[0.04] text-[#db2627]/85 hover:border-[#db2627]/30 hover:bg-[#db2627]/[0.08] hover:text-[#db2627]'
+                                        }`}
+                                        aria-pressed={isFavorited}
+                                        disabled={isFavoriting}
+                                        onClick={handleFavoriteToggle}
                                     >
                                         <Heart
-                                            className={`size-3.5 ${isLiked ? 'fill-current text-primary' : ''}`}
+                                            className={`size-3.5 ${isFavorited ? 'fill-current' : ''}`}
                                         />
-                                        {isLiked ? '已点赞' : '点赞'}
+                                        <span>
+                                            {isFavorited ? '已收藏' : '收藏'}
+                                        </span>
                                     </Button>
                                 </div>
 
@@ -236,7 +312,10 @@ export default function ResourceShow({
                                     <div className="flex items-center gap-2">
                                         <Avatar className="size-8 border border-border bg-muted">
                                             <AvatarImage
-                                                src={resource.authorAvatar ?? undefined}
+                                                src={
+                                                    resource.authorAvatar ??
+                                                    undefined
+                                                }
                                                 alt={resource.author}
                                             />
                                             <AvatarFallback className="bg-transparent text-xs font-medium text-foreground/80">
@@ -253,15 +332,14 @@ export default function ResourceShow({
                                     <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 text-[13px] sm:w-auto">
                                         <span className="inline-flex items-center gap-1.5">
                                             <Eye className="size-4" />
-                                            —
+                                            {formattedViewCount}
                                         </span>
                                         <span className="inline-flex items-center gap-1.5">
-                                            <Download className="size-4" />
-                                            —
+                                            <Download className="size-4" />—
                                         </span>
                                         <span className="inline-flex items-center gap-1.5">
-                                            <Heart className="size-4" />
-                                            —
+                                            <Heart className="size-4 text-[#db2627]" />
+                                            {formattedFavoriteCount}
                                         </span>
                                         <span className="inline-flex items-center gap-1.5">
                                             <MessageCircle className="size-4" />
@@ -274,10 +352,7 @@ export default function ResourceShow({
                     </div>
                 </article>
 
-                <Tabs
-                    value={currentSection}
-                    className="gap-4"
-                >
+                <Tabs value={currentSection} className="gap-4">
                     <TabsList className="h-auto w-full justify-start">
                         {tabItems.map((item) => (
                             <TabsTrigger
@@ -297,27 +372,37 @@ export default function ResourceShow({
                 <article className="rounded-xl border border-border bg-card p-6 shadow-xs sm:p-8">
                     {currentSection === 'details' ? (
                         <div className="space-y-5">
-                            <div className="space-y-2">
-                                <h3 className="inline-flex items-center gap-1.5 text-sm font-semibold tracking-tight text-foreground">
-                                    <Sparkles className="size-3.5 text-[#fb7299]" />
-                                    标签
-                                </h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {resource.tags.map((tag) => (
-                                        <Badge
-                                            key={tag}
-                                            variant="outline"
-                                            className={`h-7 rounded-full border px-2.5 text-[13px] font-medium ${detailTagToneClass}`}
-                                        >
-                                            {tag}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            </div>
+                            {resource.content ? (
+                                <div
+                                    className="text-sm leading-7 text-foreground/90 [&_a]:font-medium [&_a]:text-primary [&_a]:underline-offset-4 hover:[&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:tracking-tight [&_hr]:my-6 [&_hr]:border-border [&_li]:leading-7 [&_ol]:ml-6 [&_ol]:list-decimal [&_p]:text-muted-foreground [&_p:not(:last-child)]:mb-4 [&_strong]:font-semibold [&_ul]:ml-6 [&_ul]:list-disc"
+                                    dangerouslySetInnerHTML={{
+                                        __html: resource.content,
+                                    }}
+                                />
+                            ) : (
+                                <p className="text-sm leading-6 text-muted-foreground">
+                                    暂未填写资源详情内容，后续可以在后台补充介绍、参数信息或补充说明。
+                                </p>
+                            )}
 
-                            <p className="text-sm leading-6 text-muted-foreground">
-                                {sectionMeta[currentSection].description}
-                            </p>
+                            {resource.tags.length > 0 ? (
+                                <div className="space-y-3 border-t border-border/70 pt-5">
+                                    <h3 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
+                                        标签
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {resource.tags.map((tag) => (
+                                            <Badge
+                                                key={tag}
+                                                variant="outline"
+                                                className={`h-7 rounded-full border px-2.5 text-[13px] font-medium ${detailTagToneClass}`}
+                                            >
+                                                {tag}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : null}
                         </div>
                     ) : (
                         <p className="text-sm leading-6 text-muted-foreground">
