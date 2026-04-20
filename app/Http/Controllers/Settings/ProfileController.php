@@ -17,6 +17,33 @@ use Inertia\Response;
 class ProfileController extends Controller
 {
     /**
+     * Show the user's public profile summary page.
+     */
+    public function show(Request $request): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('profile/show', [
+            'profile' => [
+                'joinedAt' => $user->created_at?->toDateString(),
+                'level' => strtolower((string) $user->email) === 'admin@admin.com'
+                    ? '管理员'
+                    : '用户',
+            ],
+            'stats' => [
+                [
+                    'label' => '投稿数量',
+                    'value' => 0,
+                ],
+                [
+                    'label' => '收藏数量',
+                    'value' => 0,
+                ],
+            ],
+        ]);
+    }
+
+    /**
      * Show the user's profile settings page.
      */
     public function edit(Request $request): Response
