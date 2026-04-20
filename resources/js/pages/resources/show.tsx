@@ -8,6 +8,7 @@ import {
     MessageCircle,
     ScrollText,
 } from 'lucide-react';
+import { LayoutGroup, motion } from 'motion/react';
 import { startTransition, useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -98,6 +99,8 @@ export default function ResourceShow({
     );
     const [isFavoriting, setIsFavoriting] = useState(false);
     const currentSection = sectionMeta[section] ? section : 'details';
+    const [activeSection, setActiveSection] =
+        useState<ResourceSection>(currentSection);
     const currentSlug = resource?.slug ?? slug;
     const relativeTime = resource
         ? formatResourceRelativeTime(resource.publishedAt)
@@ -110,6 +113,13 @@ export default function ResourceShow({
         notation: 'compact',
         maximumFractionDigits: 1,
     }).format(resource?.viewCount ?? 0);
+    const favoriteButtonVariant = 'outline';
+    const favoriteButtonClass = isFavorited
+        ? 'border-[#fb7299]/28 bg-[#fb7299]/8 text-[#e25f8d] shadow-none hover:border-[#fb7299]/38 hover:bg-[#fb7299]/12 hover:text-[#cf4d7d] dark:border-[#fb7299]/24 dark:bg-[#fb7299]/12 dark:text-[#ffb0ca] dark:hover:border-[#fb7299]/32 dark:hover:bg-[#fb7299]/16 dark:hover:text-[#ffc5da]'
+        : 'border-[#fb7299]/18 bg-[#fb7299]/[0.04] text-[#e25f8d] shadow-none hover:border-[#fb7299]/26 hover:bg-[#fb7299]/[0.07] hover:text-[#cf4d7d] dark:border-[#fb7299]/20 dark:bg-[#fb7299]/[0.07] dark:text-[#ffb0ca] dark:hover:border-[#fb7299]/28 dark:hover:bg-[#fb7299]/[0.11] dark:hover:text-[#ffc5da]';
+    const favoriteIconClass = isFavorited
+        ? 'fill-current text-[#e25f8d] dark:text-[#ffb0ca]'
+        : 'text-[#e25f8d] dark:text-[#ffb0ca]';
     const tabItems = [
         {
             value: 'details' as const,
@@ -142,6 +152,10 @@ export default function ResourceShow({
             toast.dismiss(favoriteAuthToastId);
         });
     }, []);
+
+    useEffect(() => {
+        setActiveSection(currentSection);
+    }, [currentSection]);
 
     const handleFavoriteToggle = () => {
         if (resource === null || isFavoriting) {
@@ -287,18 +301,14 @@ export default function ResourceShow({
                                     </Button>
                                     <Button
                                         type="button"
-                                        variant="outline"
-                                        className={`h-9 w-full rounded-md px-2.5 text-sm shadow-none transition-colors sm:w-auto sm:px-3.5 ${
-                                            isFavorited
-                                                ? 'border-[#db2627]/35 bg-[#db2627]/10 text-[#db2627] hover:border-[#db2627]/45 hover:bg-[#db2627]/12 hover:text-[#db2627]'
-                                                : 'border-[#db2627]/20 bg-[#db2627]/[0.04] text-[#db2627]/85 hover:border-[#db2627]/30 hover:bg-[#db2627]/[0.08] hover:text-[#db2627]'
-                                        }`}
+                                        variant={favoriteButtonVariant}
+                                        className={`h-9 w-full rounded-md px-2.5 text-sm transition-colors sm:w-auto sm:px-3.5 ${favoriteButtonClass}`}
                                         aria-pressed={isFavorited}
                                         disabled={isFavoriting}
                                         onClick={handleFavoriteToggle}
                                     >
                                         <Heart
-                                            className={`size-3.5 ${isFavorited ? 'fill-current' : ''}`}
+                                            className={`size-3.5 ${favoriteIconClass}`}
                                         />
                                         <span>
                                             {isFavorited ? '已收藏' : '收藏'}
@@ -352,21 +362,50 @@ export default function ResourceShow({
                     </div>
                 </article>
 
-                <Tabs value={currentSection} className="gap-4">
-                    <TabsList className="h-auto w-full justify-start">
-                        {tabItems.map((item) => (
-                            <TabsTrigger
-                                key={item.value}
-                                value={item.value}
-                                asChild
-                            >
-                                <Link href={item.href}>
-                                    <item.icon className="size-4" />
-                                    {item.label}
-                                </Link>
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
+                <Tabs value={activeSection} className="gap-4">
+                    <LayoutGroup id="resource-tabs">
+                        <TabsList className="w-full justify-start rounded-lg p-0.75 group-data-horizontal/tabs:h-10.5 dark:bg-white/[0.045]">
+                            {tabItems.map((item) => (
+                                <TabsTrigger
+                                    key={item.value}
+                                    value={item.value}
+                                    asChild
+                                    className="rounded-md px-4.25 text-[14px] data-active:border-transparent data-active:bg-transparent group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-transparent dark:data-active:text-foreground"
+                                >
+                                    <Link
+                                        href={item.href}
+                                        prefetch={['hover', 'click']}
+                                        onMouseDown={() =>
+                                            setActiveSection(item.value)
+                                        }
+                                        onTouchStart={() =>
+                                            setActiveSection(item.value)
+                                        }
+                                        onClick={() =>
+                                            setActiveSection(item.value)
+                                        }
+                                    >
+                                        {activeSection === item.value ? (
+                                            <motion.span
+                                                layoutId="resource-tabs-active-pill"
+                                                className="pointer-events-none absolute inset-0 rounded-md bg-primary/10 dark:bg-primary/14"
+                                                transition={{
+                                                    bounce: 0.14,
+                                                    duration: 0.2,
+                                                    ease: 'easeOut',
+                                                }}
+                                            />
+                                        ) : null}
+
+                                        <span className="relative z-10 inline-flex items-center gap-1.5">
+                                            <item.icon className="size-4" />
+                                            {item.label}
+                                        </span>
+                                    </Link>
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </LayoutGroup>
                 </Tabs>
 
                 <article className="rounded-xl border border-border bg-card p-6 shadow-xs sm:p-8">
