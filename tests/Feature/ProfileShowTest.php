@@ -54,6 +54,7 @@ test('authenticated users can view their profile summary page', function () {
             ->where('profile.joinedAt', $user->created_at?->toDateString())
             ->where('profile.level', '用户')
             ->where('isOwnProfile', true)
+            ->where('activeTab', 'submissions')
             ->where('availableTabs', ['submissions', 'favorites', 'comments'])
             ->where('stats.0.label', '投稿数量')
             ->where('stats.0.value', 1)
@@ -65,8 +66,7 @@ test('authenticated users can view their profile summary page', function () {
             ->where('collections.submissions.0.title', '我的投稿')
             ->where('collections.submissions.0.categories.0.name', '动作')
             ->where('collections.submissions.0.tags.0', '热门')
-            ->where('collections.favorites.0.slug', $favoritedResource->slug)
-            ->where('collections.favorites.0.title', '我的收藏'),
+            ->missing('collections.favorites'),
         );
 });
 
@@ -120,6 +120,7 @@ test('authenticated users can view another users public profile page', function 
             ->where('profileUser.signature', '把每一次瞄准都变成回答。')
             ->where('profile.joinedAt', $profileOwner->created_at?->toDateString())
             ->where('isOwnProfile', false)
+            ->where('activeTab', 'submissions')
             ->where('availableTabs', ['submissions'])
             ->where('stats.0.value', 1)
             ->where('stats.1.value', 1)
@@ -135,6 +136,79 @@ test('guests cannot view another users public profile page', function () {
 
     $this->get(route('users.show', $user))
         ->assertRedirect(route('login'));
+});
+
+test('authenticated users can view their favorites tab on the unified profile page', function () {
+    $user = User::factory()->create();
+    $category = ResourceCategory::query()->create([
+        'name' => '恋爱',
+        'slug' => 'love',
+    ]);
+    $tag = Tag::query()->create([
+        'name' => '新作',
+        'slug' => 'new-release',
+    ]);
+    $favoritedResource = Resource::query()->create([
+        'title' => '我的收藏',
+        'slug' => Str::random(7),
+        'user_id' => User::factory()->create()->id,
+        'thumbnail_path' => 'https://example.com/favorites-cover.jpg',
+        'published_at' => now()->subHour(),
+    ]);
+    $favoritedResource->categories()->attach($category);
+    $favoritedResource->tags()->attach($tag);
+    $user->favoriteResources()->attach($favoritedResource);
+
+    $this->actingAs($user)
+        ->get(route('users.favorites', $user))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('profile/show')
+            ->where('profileUser.id', $user->id)
+            ->where('isOwnProfile', true)
+            ->where('activeTab', 'favorites')
+            ->where('availableTabs', ['submissions', 'favorites', 'comments'])
+            ->where('collections.favorites.0.slug', $favoritedResource->slug)
+            ->where('collections.favorites.0.title', '我的收藏')
+            ->where('collections.favorites.0.categories.0.name', '恋爱')
+            ->where('collections.favorites.0.tags.0', '新作')
+            ->missing('collections.submissions'),
+        );
+});
+
+test('authenticated users can view their comments tab placeholder on the unified profile page', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('users.comments', $user))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('profile/show')
+            ->where('profileUser.id', $user->id)
+            ->where('isOwnProfile', true)
+            ->where('activeTab', 'comments')
+            ->where('availableTabs', ['submissions', 'favorites', 'comments'])
+            ->missing('collections.submissions')
+            ->missing('collections.favorites'),
+        );
+});
+
+test('authenticated users cannot view another users favorites tab', function () {
+    $viewer = User::factory()->create();
+    $profileOwner = User::factory()->create();
+
+    $this->actingAs($viewer)
+        ->get(route('users.favorites', $profileOwner))
+        ->assertRedirect(route('users.show', $profileOwner));
+});
+
+test('authenticated users cannot view another users comments tab', function () {
+    $viewer = User::factory()->create();
+    $profileOwner = User::factory()->create();
+
+    $this->actingAs($viewer)
+        ->get(route('users.comments', $profileOwner))
+        ->assertRedirect(route('users.show', $profileOwner));
 });
 
 test('users visiting their own public profile url are redirected to their private profile page', function () {
@@ -154,6 +228,7 @@ test('users can view their own unified profile page from the users route', funct
         ->assertInertia(fn (Assert $page) => $page
             ->component('profile/show')
             ->where('profileUser.id', $user->id)
+            ->where('activeTab', 'submissions')
             ->where('isOwnProfile', true)
             ->where('availableTabs', ['submissions', 'favorites', 'comments']),
         );
@@ -170,6 +245,7 @@ test('admin users receive the admin level on the profile summary page', function
         ->assertInertia(fn (Assert $page) => $page
             ->component('profile/show')
             ->where('isOwnProfile', true)
+            ->where('activeTab', 'submissions')
             ->where('availableTabs', ['submissions', 'favorites', 'comments'])
             ->where('profile.level', '管理员')
             ->where('stats.0.label', '投稿数量')

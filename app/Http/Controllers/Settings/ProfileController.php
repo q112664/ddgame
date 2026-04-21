@@ -17,6 +17,12 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    private const TAB_SUBMISSIONS = 'submissions';
+
+    private const TAB_FAVORITES = 'favorites';
+
+    private const TAB_COMMENTS = 'comments';
+
     /**
      * Show the user's public profile summary page.
      */
@@ -30,10 +36,23 @@ class ProfileController extends Controller
      */
     public function showPublic(Request $request, User $user): Response
     {
-        $isOwnProfile = $request->user()->is($user);
-        $profileUser = $this->loadProfileUser($user, $isOwnProfile);
+        return $this->renderProfileTab($request, $user, self::TAB_SUBMISSIONS);
+    }
 
-        return Inertia::render('profile/show', $this->buildProfilePayload($profileUser, $isOwnProfile));
+    /**
+     * Show a user's favorited resources page.
+     */
+    public function showFavorites(Request $request, User $user): Response|RedirectResponse
+    {
+        return $this->renderProfileTab($request, $user, self::TAB_FAVORITES);
+    }
+
+    /**
+     * Show a user's comments page.
+     */
+    public function showComments(Request $request, User $user): Response|RedirectResponse
+    {
+        return $this->renderProfileTab($request, $user, self::TAB_COMMENTS);
     }
 
     /**
@@ -111,18 +130,35 @@ class ProfileController extends Controller
         Storage::disk('public')->delete($avatarPath);
     }
 
-    private function loadProfileUser(User $user, bool $loadFavoriteResources): User
+    private function renderProfileTab(Request $request, User $user, string $activeTab): Response|RedirectResponse
+    {
+        $isOwnProfile = $request->user()->is($user);
+
+        if (! $this->tabIsAvailable($activeTab, $isOwnProfile)) {
+            return to_route('users.show', $user);
+        }
+
+        $profileUser = $this->loadProfileUser($user, $activeTab, $isOwnProfile);
+
+        return Inertia::render('profile/show', $this->buildProfilePayload($profileUser, $isOwnProfile, $activeTab));
+    }
+
+    private function loadProfileUser(User $user, string $activeTab, bool $isOwnProfile): User
     {
         $user->loadCount([
             'submittedResources',
             'favoriteResources',
-        ])->load([
-            'submittedResources' => fn ($query) => $query
-                ->with(['categories', 'author', 'tags'])
-                ->latest('published_at'),
         ]);
 
-        if ($loadFavoriteResources) {
+        if ($activeTab === self::TAB_SUBMISSIONS) {
+            $user->load([
+                'submittedResources' => fn ($query) => $query
+                    ->with(['categories', 'author', 'tags'])
+                    ->latest('published_at'),
+            ]);
+        }
+
+        if ($isOwnProfile && $activeTab === self::TAB_FAVORITES) {
             $user->load([
                 'favoriteResources' => fn ($query) => $query
                     ->with(['categories', 'author', 'tags'])
@@ -136,21 +172,23 @@ class ProfileController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function buildProfilePayload(User $user, bool $isOwnProfile): array
+    private function buildProfilePayload(User $user, bool $isOwnProfile, string $activeTab): array
     {
-        $collections = [
-            'submissions' => $user->submittedResources
-                ->map(fn (Resource $resource): array => $this->serializeResource($resource))
-                ->values()
-                ->all(),
-        ];
-
-        if ($isOwnProfile) {
-            $collections['favorites'] = $user->favoriteResources
-                ->map(fn (Resource $resource): array => $this->serializeResource($resource))
-                ->values()
-                ->all();
-        }
+        $collections = match ($activeTab) {
+            self::TAB_SUBMISSIONS => [
+                self::TAB_SUBMISSIONS => $user->submittedResources
+                    ->map(fn (Resource $resource): array => $this->serializeResource($resource))
+                    ->values()
+                    ->all(),
+            ],
+            self::TAB_FAVORITES => [
+                self::TAB_FAVORITES => $user->favoriteResources
+                    ->map(fn (Resource $resource): array => $this->serializeResource($resource))
+                    ->values()
+                    ->all(),
+            ],
+            default => [],
+        };
 
         return [
             'profileUser' => [
@@ -179,12 +217,22 @@ class ProfileController extends Controller
                     'value' => 0,
                 ],
             ],
+            'activeTab' => $activeTab,
             'collections' => $collections,
             'availableTabs' => $isOwnProfile
-                ? ['submissions', 'favorites', 'comments']
-                : ['submissions'],
+                ? [self::TAB_SUBMISSIONS, self::TAB_FAVORITES, self::TAB_COMMENTS]
+                : [self::TAB_SUBMISSIONS],
             'isOwnProfile' => $isOwnProfile,
         ];
+    }
+
+    private function tabIsAvailable(string $activeTab, bool $isOwnProfile): bool
+    {
+        if ($activeTab === self::TAB_SUBMISSIONS) {
+            return true;
+        }
+
+        return $isOwnProfile && in_array($activeTab, [self::TAB_FAVORITES, self::TAB_COMMENTS], true);
     }
 
     /**

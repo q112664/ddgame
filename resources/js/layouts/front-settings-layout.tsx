@@ -43,15 +43,6 @@ export default function FrontSettingsLayout({
 
     return (
         <div className="space-y-6 px-1 py-4">
-            <header className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-                    编辑设置
-                </h1>
-                <p className="max-w-2xl text-sm text-muted-foreground">
-                    你可以在此页面管理你的个人信息和站点设置。
-                </p>
-            </header>
-
             <Tabs value={pendingValue} className="gap-0">
                 <LayoutGroup id="front-settings-tabs">
                     <TabsList

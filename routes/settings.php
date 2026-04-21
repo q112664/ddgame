@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth'])->group(function () {
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('users/{user}', [ProfileController::class, 'showPublic'])->name('users.show');
+    Route::get('users/{user}/favorites', [ProfileController::class, 'showFavorites'])->name('users.favorites');
+    Route::get('users/{user}/comments', [ProfileController::class, 'showComments'])->name('users.comments');
 
     Route::redirect('settings', '/settings/profile');
 

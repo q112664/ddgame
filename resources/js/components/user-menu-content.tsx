@@ -56,7 +56,6 @@ export function UserMenuContent({ user }: Props) {
                     <Link
                         className="block w-full cursor-pointer"
                         href={showUserProfile({ user: user.id })}
-                        prefetch
                         onClick={cleanup}
                     >
                         <CircleUserRound className="mr-2" />
