@@ -22,6 +22,7 @@ test('profile information can be updated', function () {
         ->patch(route('profile.update'), [
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'signature' => '在风里找自己的方向。',
         ]);
 
     $response
@@ -32,7 +33,25 @@ test('profile information can be updated', function () {
 
     expect($user->name)->toBe('Test User');
     expect($user->email)->toBe('test@example.com');
+    expect($user->signature)->toBe('在风里找自己的方向。');
     expect($user->email_verified_at)->toBeNull();
+});
+
+test('signature must not exceed the maximum length', function () {
+    $user = User::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->from(route('profile.edit'))
+        ->patch(route('profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'signature' => str_repeat('签', 281),
+        ]);
+
+    $response
+        ->assertSessionHasErrors('signature')
+        ->assertRedirect(route('profile.edit'));
 });
 
 test('user can upload an avatar', function () {

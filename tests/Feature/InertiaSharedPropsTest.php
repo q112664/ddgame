@@ -21,6 +21,7 @@ test('shared inertia props expose a minimal authenticated user payload', functio
             ->where('site.navigation.primary.0.openInNewTab', false)
             ->where('site.navigation.primary.1.label', '系统')
             ->where('site.navigation.primary.2.label', '状态')
+            ->where('flash.favoriteUpdate', null)
             ->where('sidebarOpen', false)
             ->where('auth.user', fn ($sharedUser): bool => array_keys($sharedUser->all()) === [
                 'id',

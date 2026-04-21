@@ -142,7 +142,7 @@ export default function FrontSiteShell({ children }: { children: ReactNode }) {
 
     return (
         <div className="min-h-screen bg-background">
-            <header className="border-b border-border bg-card">
+            <header className="fixed inset-x-0 top-0 z-50 border-b border-border/80 bg-card/85 backdrop-blur-xl [body[data-scroll-locked]_&]:pr-[var(--removed-body-scroll-bar-size,0px)]">
                 <div className="mx-auto flex h-14 w-full max-w-[1280px] items-center justify-between px-4">
                     <div className="flex items-center gap-2.5">
                         <div className="md:hidden">
@@ -315,7 +315,7 @@ export default function FrontSiteShell({ children }: { children: ReactNode }) {
                 </div>
             </header>
 
-            <main className="mx-auto w-full max-w-[1280px] px-2 py-4 sm:px-4 sm:py-6">
+            <main className="mx-auto w-full max-w-[1280px] px-2 pt-18 pb-4 sm:px-4 sm:pt-20 sm:pb-6">
                 {children}
             </main>
 

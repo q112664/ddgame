@@ -6,11 +6,7 @@ import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileCo
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,7 +26,9 @@ export default function Profile({
     } = usePage<{ auth: { user: User } }>().props;
     const getInitials = useInitials();
     const avatarInputRef = useRef<HTMLInputElement>(null);
-    const [selectedAvatarPreview, setSelectedAvatarPreview] = useState<string | null>(null);
+    const [selectedAvatarPreview, setSelectedAvatarPreview] = useState<
+        string | null
+    >(null);
     const [selectedAvatarName, setSelectedAvatarName] = useState<string | null>(
         null,
     );
@@ -97,9 +95,7 @@ export default function Profile({
                                 <Label htmlFor="avatar">头像</Label>
 
                                 <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                                    <Avatar
-                                        className="!size-[72px] bg-muted sm:!size-20"
-                                    >
+                                    <Avatar className="!size-[72px] bg-muted sm:!size-20">
                                         <AvatarImage
                                             src={avatarPreview ?? undefined}
                                             alt={user.name}
@@ -133,12 +129,14 @@ export default function Profile({
                                             </Button>
 
                                             <span className="text-sm text-muted-foreground">
-                                                {selectedAvatarName ?? '未选择新文件'}
+                                                {selectedAvatarName ??
+                                                    '未选择新文件'}
                                             </span>
                                         </div>
 
                                         <p className="text-sm leading-6 text-muted-foreground">
-                                            支持 JPG、PNG、WEBP 等常见图片格式，单张不超过 2MB。
+                                            支持 JPG、PNG、WEBP
+                                            等常见图片格式，单张不超过 2MB。
                                         </p>
                                     </div>
                                 </div>
@@ -182,6 +180,30 @@ export default function Profile({
                                 <InputError
                                     className="mt-2"
                                     message={errors.email}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="signature">签名</Label>
+
+                                <textarea
+                                    id="signature"
+                                    name="signature"
+                                    defaultValue={user.signature ?? ''}
+                                    rows={4}
+                                    maxLength={280}
+                                    placeholder="写一句能代表你的签名吧"
+                                    className="min-h-28 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+                                />
+
+                                <p className="text-sm text-muted-foreground">
+                                    最多 280
+                                    个字符，会展示在你的个人信息资料卡中。
+                                </p>
+
+                                <InputError
+                                    className="mt-2"
+                                    message={errors.signature}
                                 />
                             </div>
 

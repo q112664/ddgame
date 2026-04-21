@@ -97,6 +97,7 @@ it('renders the resource page header from backend resources', function () {
             ->where('resource.slug', $resource->slug)
             ->where('resource.title', $resource->title)
             ->where('resource.subtitle', '这是一个更轻量的资源副标题。')
+            ->where('resource.thumbnail', 'https://example.com/show.jpg')
             ->where('resource.categories.0.name', $category->name)
             ->where('resource.categories.1.name', $secondaryCategory->name)
             ->where('resource.author', $author->name)

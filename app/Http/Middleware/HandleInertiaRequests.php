@@ -43,6 +43,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => fn (): ?array => $this->resolveSharedUser($request),
             ],
+            'flash' => [
+                'favoriteUpdate' => fn (): ?array => $this->resolveFavoriteUpdateFlash($request),
+            ],
             'sidebarOpen' => fn (): bool => $this->resolveSidebarOpen($request),
         ];
     }
@@ -53,6 +56,7 @@ class HandleInertiaRequests extends Middleware
      *     name: string,
      *     email: string,
      *     avatar: ?string,
+     *     signature: ?string,
      *     email_verified_at: ?string
      * }|null
      */
@@ -69,6 +73,7 @@ class HandleInertiaRequests extends Middleware
             'name' => $user->name,
             'email' => $user->email,
             'avatar' => $user->avatar,
+            'signature' => $user->signature,
             'email_verified_at' => $user->email_verified_at?->toIso8601String(),
         ];
     }
@@ -77,5 +82,34 @@ class HandleInertiaRequests extends Middleware
     {
         return ! $request->hasCookie('sidebar_state')
             || $request->cookie('sidebar_state') === 'true';
+    }
+
+    /**
+     * @return array{
+     *     resourceSlug: string,
+     *     favorited: bool,
+     *     favoriteCount: int
+     * }|null
+     */
+    private function resolveFavoriteUpdateFlash(Request $request): ?array
+    {
+        $favoriteUpdate = $request->session()->get('favoriteUpdate');
+
+        if (! is_array($favoriteUpdate)) {
+            return null;
+        }
+
+        $resourceSlug = $favoriteUpdate['resourceSlug'] ?? null;
+        $favoriteCount = $favoriteUpdate['favoriteCount'] ?? null;
+
+        if (! is_string($resourceSlug) || ! is_numeric($favoriteCount)) {
+            return null;
+        }
+
+        return [
+            'resourceSlug' => $resourceSlug,
+            'favorited' => (bool) ($favoriteUpdate['favorited'] ?? false),
+            'favoriteCount' => (int) $favoriteCount,
+        ];
     }
 }
