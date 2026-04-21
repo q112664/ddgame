@@ -1,94 +1,67 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import FrontSiteShell from '@/components/front-site-shell';
-import { Badge } from '@/components/ui/badge';
-import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
-import { cn } from '@/lib/utils';
-import { show as showResource } from '@/routes/resources/index';
-import type { FrontendResource } from '@/types';
-
-function TopicBadge({
-    children,
-    className,
-}: {
-    children: string;
-    className?: string;
-}) {
-    return (
-        <Badge
-            variant="outline"
-            className={cn(
-                'h-6 rounded-full border-0 px-2.5 text-[11px] font-medium ring-1',
-                className,
-            )}
-        >
-            {children}
-        </Badge>
-    );
-}
-
-function TopicCardItem({
-    slug,
-    title,
-    thumbnail,
-    categories,
-}: FrontendResource) {
-    return (
-        <Link
-            href={showResource({ slug })}
-            className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-200 hover:bg-primary/5 dark:hover:bg-primary/10 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-        >
-            <div className="relative h-44 overflow-hidden leading-none">
-                <img
-                    src={thumbnail}
-                    alt={title}
-                    loading="lazy"
-                    className="block h-full w-full object-cover"
-                />
-            </div>
-
-            <div className="flex flex-1 flex-col gap-2 p-3">
-                <div className="space-y-3">
-                    <h2 className="line-clamp-2 min-h-[3rem] text-[1.05rem] leading-6 font-medium text-foreground">
-                        {title}
-                    </h2>
-
-                    <div className="flex flex-wrap gap-1.5">
-                        {categories.map((category) => (
-                            <TopicBadge
-                                key={category.name}
-                                className={getResourceCategoryBadgeToneClass(category.color)}
-                            >
-                                {category.name}
-                            </TopicBadge>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </Link>
-    );
-}
+import { Button } from '@/components/ui/button';
+import { index as showResources } from '@/routes/resources/index';
 
 export default function Home() {
-    const { resources } = usePage<{ resources: FrontendResource[] }>().props;
-
     return (
         <>
             <Head title="首页" />
 
             <FrontSiteShell>
-                <section
-                    id="overview"
-                    className="space-y-4"
-                >
-                    <div className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        {resources.map((resource) => (
-                            <TopicCardItem
-                                key={resource.slug}
-                                {...resource}
-                            />
-                        ))}
-                    </div>
-                </section>
+                <div className="space-y-4">
+                    <section
+                        id="overview"
+                        className="rounded-xl border border-border bg-card p-5 shadow-xs sm:p-6"
+                    >
+                        <div className="max-w-2xl space-y-3">
+                            <p className="text-sm font-medium text-primary">
+                                首页
+                            </p>
+                            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                                首页结构已拆分，资源内容现在单独归档展示
+                            </h1>
+                            <p className="text-sm leading-6 text-muted-foreground sm:text-[15px]">
+                                当前首页先保留轻量结构占位，资源总列表已经迁到独立页面，后续可以在这里继续补欢迎区、推荐位或站点说明。
+                            </p>
+                            <div className="flex flex-wrap gap-3">
+                                <Button asChild>
+                                    <Link href={showResources()}>
+                                        进入资源页
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section
+                        id="systems"
+                        className="rounded-xl border border-border bg-card p-5 shadow-xs sm:p-6"
+                    >
+                        <div className="space-y-2">
+                            <h2 className="text-lg font-semibold text-foreground">
+                                系统
+                            </h2>
+                            <p className="text-sm leading-6 text-muted-foreground">
+                                这里预留给后续的系统说明、使用方式或站点能力介绍，当前先保留稳定锚点结构。
+                            </p>
+                        </div>
+                    </section>
+
+                    <section
+                        id="status"
+                        className="rounded-xl border border-border bg-card p-5 shadow-xs sm:p-6"
+                    >
+                        <div className="space-y-2">
+                            <h2 className="text-lg font-semibold text-foreground">
+                                状态
+                            </h2>
+                            <p className="text-sm leading-6 text-muted-foreground">
+                                这里预留给后续的更新状态、运行状态或公告信息，当前先保留稳定锚点结构。
+                            </p>
+                        </div>
+                    </section>
+                </div>
             </FrontSiteShell>
         </>
     );

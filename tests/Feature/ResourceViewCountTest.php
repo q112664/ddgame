@@ -45,7 +45,7 @@ it('increments the view count when opening the resource details page', function 
     expect($resource->fresh()->view_count)->toBe(1);
 });
 
-it('increments the view count on non-details resource sections too', function () {
+it('does not increment the view count again when browsing other sections in the same session', function () {
     $resource = createViewableResource();
 
     $this->get(route('resources.downloads', ['slug' => $resource->slug]))
@@ -60,9 +60,38 @@ it('increments the view count on non-details resource sections too', function ()
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('resources/show')
-            ->where('resource.viewCount', 2)
+            ->where('resource.viewCount', 1)
             ->where('section', 'discussion')
         );
 
+    expect($resource->fresh()->view_count)->toBe(1);
+});
+
+it('increments the view count again after the cooldown window passes', function () {
+    $resource = createViewableResource();
+
+    $this->get(route('resources.show', ['slug' => $resource->slug]))
+        ->assertOk();
+
+    $this->travel(31)->minutes();
+
+    $this->get(route('resources.show', ['slug' => $resource->slug]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('resources/show')
+            ->where('resource.viewCount', 2)
+            ->where('section', 'details')
+        );
+
     expect($resource->fresh()->view_count)->toBe(2);
+});
+
+it('does not increment the view count for prefetch requests', function () {
+    $resource = createViewableResource();
+
+    $this->withHeader('Purpose', 'prefetch')
+        ->get(route('resources.show', ['slug' => $resource->slug]))
+        ->assertOk();
+
+    expect($resource->fresh()->view_count)->toBe(0);
 });

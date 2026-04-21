@@ -22,13 +22,6 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import { toast } from '@/components/ui/sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInitials } from '@/hooks/use-initials';
@@ -51,6 +44,11 @@ const detailTagToneClass =
     'border-[#fb7299]/25 bg-[#fb7299]/10 text-[#fb7299] dark:border-[#fb7299]/30 dark:bg-[#fb7299]/14 dark:text-[#ff8fb0]';
 const favoriteAuthToastId = 'resource-favorite-auth-required';
 const favoriteUpdateToastId = 'resource-favorite-update';
+const contentPanelClass =
+    'rounded-xl bg-white shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)] dark:bg-zinc-800';
+const contentPanelDividerClass = 'border-gray-200 dark:border-zinc-700';
+const contentPanelStripClass =
+    'bg-white shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)] dark:bg-zinc-800';
 
 const sectionMeta: Record<
     ResourceSection,
@@ -260,46 +258,17 @@ export default function ResourceShow({
                     </Breadcrumb>
                 </div>
 
-                <article className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+                <article
+                    className={`overflow-hidden ${contentPanelClass}`}
+                >
                     <div className="flex flex-col lg:flex-row">
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <button
-                                    type="button"
-                                    className="group relative aspect-[16/10] cursor-zoom-in overflow-hidden bg-muted text-left transition-opacity outline-none hover:opacity-95 focus-visible:ring-2 focus-visible:ring-ring/50 sm:aspect-[16/9] lg:aspect-auto lg:min-h-[288px] lg:w-[400px] lg:shrink-0 lg:self-stretch"
-                                    aria-label={`查看 ${resource.title} 全图`}
-                                >
-                                    <img
-                                        src={resource.thumbnail}
-                                        alt={resource.title}
-                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] lg:absolute lg:inset-0 lg:h-full"
-                                    />
-                                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between bg-linear-to-t from-black/70 via-black/25 to-transparent px-4 py-3 text-white">
-                                        <span className="line-clamp-1 text-sm font-medium drop-shadow-sm">
-                                            点击查看大图
-                                        </span>
-                                        <span className="rounded-full border border-white/30 bg-black/20 px-2.5 py-1 text-xs text-white/90 backdrop-blur-xs">
-                                            全图
-                                        </span>
-                                    </div>
-                                </button>
-                            </DialogTrigger>
-                            <DialogContent className="max-h-[90vh] max-w-[min(92vw,1200px)] overflow-hidden border-border/60 bg-background/95 p-0 backdrop-blur-sm">
-                                <DialogTitle className="sr-only">
-                                    {resource.title} 全图预览
-                                </DialogTitle>
-                                <DialogDescription className="sr-only">
-                                    查看资源缩略图的大图版本。
-                                </DialogDescription>
-                                <div className="flex max-h-[90vh] items-center justify-center bg-black/85 p-2 sm:p-4">
-                                    <img
-                                        src={resource.thumbnail}
-                                        alt={resource.title}
-                                        className="max-h-[calc(90vh-1rem)] w-auto max-w-full rounded-lg object-contain shadow-2xl sm:max-h-[calc(90vh-2rem)]"
-                                    />
-                                </div>
-                            </DialogContent>
-                        </Dialog>
+                        <div className="relative aspect-[16/10] overflow-hidden bg-muted sm:aspect-[16/9] lg:aspect-auto lg:min-h-[288px] lg:w-[400px] lg:shrink-0 lg:self-stretch">
+                            <img
+                                src={resource.thumbnail}
+                                alt={resource.title}
+                                className="h-full w-full object-cover lg:absolute lg:inset-0 lg:h-full"
+                            />
+                        </div>
 
                         <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
                             <div className="flex min-h-full flex-col justify-center gap-3 sm:gap-3.5">
@@ -357,7 +326,9 @@ export default function ResourceShow({
                                     </Button>
                                 </div>
 
-                                <div className="border-t border-border/70" />
+                                <div
+                                    className={`border-t ${contentPanelDividerClass}`}
+                                />
 
                                 <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-5 sm:gap-y-2">
                                     <div className="flex items-center gap-2">
@@ -405,7 +376,9 @@ export default function ResourceShow({
 
                 <Tabs value={activeSection} className="gap-4">
                     <LayoutGroup id="resource-tabs">
-                        <TabsList className="w-full justify-start rounded-lg p-0.75 group-data-horizontal/tabs:h-10.5 dark:bg-white/[0.045]">
+                        <TabsList
+                            className={`w-full justify-start rounded-lg p-0.75 group-data-horizontal/tabs:h-10.5 ${contentPanelStripClass}`}
+                        >
                             {tabItems.map((item) => (
                                 <TabsTrigger
                                     key={item.value}
@@ -449,7 +422,7 @@ export default function ResourceShow({
                     </LayoutGroup>
                 </Tabs>
 
-                <article className="rounded-xl border border-border bg-card p-6 shadow-xs sm:p-8">
+                <article className={`${contentPanelClass} p-6 sm:p-8`}>
                     {currentSection === 'details' ? (
                         <div className="space-y-5">
                             {resource.content ? (
@@ -466,7 +439,9 @@ export default function ResourceShow({
                             )}
 
                             {resource.tags.length > 0 ? (
-                                <div className="space-y-3 border-t border-border/70 pt-5">
+                                <div
+                                    className={`space-y-3 border-t pt-5 ${contentPanelDividerClass}`}
+                                >
                                     <h3 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
                                         标签
                                     </h3>
