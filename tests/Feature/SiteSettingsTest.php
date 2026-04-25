@@ -11,8 +11,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Livewire\Livewire;
 
 test('admin can render the split site settings pages', function () {
-    $admin = User::factory()->create([
-        'email' => 'admin@admin.com',
+    $admin = User::factory()->admin()->create([
         'email_verified_at' => now(),
     ]);
 
@@ -111,8 +110,7 @@ test('shared inertia props expose saved site settings', function () {
 test('split settings forms are filled from the saved singleton record', function () {
     Storage::fake('public');
 
-    $admin = User::factory()->create([
-        'email' => 'admin@admin.com',
+    $admin = User::factory()->admin()->create([
         'email_verified_at' => now(),
     ]);
 

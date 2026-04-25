@@ -14,7 +14,7 @@ function Toaster({ className, toastOptions, ...props }: ToasterProps) {
             className={cn('toaster group', className)}
             toastOptions={{
                 classNames: {
-                    toast: 'group toast border-border bg-card text-card-foreground shadow-lg',
+                    toast: 'group toast border-border bg-card text-card-foreground shadow-md',
                     title: 'text-sm font-medium',
                     description: 'text-sm text-muted-foreground',
                     actionButton:

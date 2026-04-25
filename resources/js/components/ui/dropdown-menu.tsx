@@ -6,10 +6,22 @@ import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 import { cn } from "@/lib/utils"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
 
+const DropdownMenuInteractionContext = React.createContext<{
+  lastInteractionWasPointerRef: React.MutableRefObject<boolean>
+} | null>(null)
+
 function DropdownMenu({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+  const lastInteractionWasPointerRef = React.useRef(false)
+
+  return (
+    <DropdownMenuInteractionContext.Provider
+      value={{ lastInteractionWasPointerRef }}
+    >
+      <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+    </DropdownMenuInteractionContext.Provider>
+  )
 }
 
 function DropdownMenuPortal({
@@ -21,11 +33,29 @@ function DropdownMenuPortal({
 }
 
 function DropdownMenuTrigger({
+  onKeyDown,
+  onPointerDown,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+  const interactionContext = React.useContext(DropdownMenuInteractionContext)
+
   return (
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
+      onKeyDown={(event) => {
+        if (interactionContext) {
+          interactionContext.lastInteractionWasPointerRef.current = false
+        }
+
+        onKeyDown?.(event)
+      }}
+      onPointerDown={(event) => {
+        if (interactionContext) {
+          interactionContext.lastInteractionWasPointerRef.current = true
+        }
+
+        onPointerDown?.(event)
+      }}
       {...props}
     />
   )
@@ -35,8 +65,11 @@ function DropdownMenuContent({
   className,
   align = "start",
   sideOffset = 4,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+  const interactionContext = React.useContext(DropdownMenuInteractionContext)
+
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
@@ -44,6 +77,16 @@ function DropdownMenuContent({
         sideOffset={sideOffset}
         align={align}
         className={cn("z-50 max-h-(--radix-dropdown-menu-content-available-height) w-(--radix-dropdown-menu-trigger-width) min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:overflow-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event)
+
+          if (
+            !event.defaultPrevented &&
+            interactionContext?.lastInteractionWasPointerRef.current
+          ) {
+            event.preventDefault()
+          }
+        }}
         {...props}
       />
     </DropdownMenuPrimitive.Portal>
@@ -244,7 +287,7 @@ function DropdownMenuSubContent({
   return (
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
-      className={cn("z-50 min-w-[96px] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-md bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+      className={cn("z-50 min-w-[96px] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-md bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
       {...props}
     />
   )

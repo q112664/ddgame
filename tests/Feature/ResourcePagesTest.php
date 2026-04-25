@@ -63,16 +63,94 @@ it('renders the resource index page from backend resources in publish order', fu
             ->component('resources/index')
             ->where('auth.user', null)
             ->where('sidebarOpen', true)
-            ->has('resources', 2)
-            ->where('resources.0.slug', $newerResource->slug)
-            ->where('resources.0.title', $newerResource->title)
-            ->where('resources.0.categories.0.name', $category->name)
-            ->where('resources.0.categories.0.color', $category->color->value)
-            ->where('resources.0.categories.1.name', $secondaryCategory->name)
-            ->where('resources.0.author', $author->name)
-            ->where('resources.0.authorAvatar', null)
-            ->where('resources.0.tags.0', '标签一')
-            ->where('resources.1.slug', $olderResource->slug)
+            ->has('resources.data', 2)
+            ->where('resources.data.0.slug', $newerResource->slug)
+            ->where('resources.data.0.title', $newerResource->title)
+            ->where('resources.data.0.categories.0.name', $category->name)
+            ->where('resources.data.0.categories.0.color', $category->color->value)
+            ->where('resources.data.0.categories.1.name', $secondaryCategory->name)
+            ->where('resources.data.0.author', $author->name)
+            ->where('resources.data.0.authorAvatar', null)
+            ->where('resources.data.0.tags.0', '标签一')
+            ->where('resources.data.1.slug', $olderResource->slug)
+        );
+});
+
+it('filters the resource index page by category query parameter', function () {
+    $primaryCategory = ResourceCategory::query()->create([
+        'name' => 'PC游戏',
+        'slug' => 'pc-games',
+        'sort_order' => 1,
+    ]);
+    $secondaryCategory = ResourceCategory::query()->create([
+        'name' => '手机游戏',
+        'slug' => 'mobile-games',
+        'sort_order' => 2,
+    ]);
+    $author = User::factory()->create();
+
+    $includedResource = Resource::query()->create([
+        'title' => 'PC 专属资源',
+        'thumbnail_path' => 'https://example.com/pc.jpg',
+        'user_id' => $author->id,
+        'published_at' => '2026-04-09 12:00:00',
+    ])->refresh();
+    $excludedResource = Resource::query()->create([
+        'title' => '移动端资源',
+        'thumbnail_path' => 'https://example.com/mobile.jpg',
+        'user_id' => $author->id,
+        'published_at' => '2026-04-10 12:00:00',
+    ])->refresh();
+
+    $includedResource->categories()->sync([$primaryCategory->id]);
+    $excludedResource->categories()->sync([$secondaryCategory->id]);
+
+    $this->get(route('resources.index', ['category' => $primaryCategory->slug]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('resources/index')
+            ->where('filters.category', $primaryCategory->slug)
+            ->where('filters.sort', 'latest')
+            ->where('filterOptions.categories.0.label', '全部')
+            ->where('filterOptions.categories.0.value', '')
+            ->where('filterOptions.categories.1.label', $primaryCategory->name)
+            ->has('resources.data', 1)
+            ->where('resources.data.0.slug', $includedResource->slug)
+        );
+});
+
+it('sorts the resource index page by query parameter', function () {
+    $author = User::factory()->create();
+
+    $olderResource = Resource::query()->create([
+        'title' => '较早发布',
+        'thumbnail_path' => 'https://example.com/older-sort.jpg',
+        'user_id' => $author->id,
+        'published_at' => '2026-04-08 12:00:00',
+        'view_count' => 500,
+    ])->refresh();
+    $newerResource = Resource::query()->create([
+        'title' => '较晚发布',
+        'thumbnail_path' => 'https://example.com/newer-sort.jpg',
+        'user_id' => $author->id,
+        'published_at' => '2026-04-09 12:00:00',
+        'view_count' => 10,
+    ])->refresh();
+
+    $this->get(route('resources.index', ['sort' => 'oldest']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.sort', 'oldest')
+            ->where('resources.data.0.slug', $olderResource->slug)
+            ->where('resources.data.1.slug', $newerResource->slug)
+        );
+
+    $this->get(route('resources.index', ['sort' => 'views']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.sort', 'views')
+            ->where('resources.data.0.slug', $olderResource->slug)
+            ->where('resources.data.1.slug', $newerResource->slug)
         );
 });
 
@@ -127,9 +205,9 @@ it('renders a category page with only resources from that category', function ()
             ->where('category.slug', $primaryCategory->slug)
             ->where('category.color', $primaryCategory->color->value)
             ->where('category.resourceCount', 2)
-            ->has('resources', 2)
-            ->where('resources.0.slug', $sharedResource->slug)
-            ->where('resources.1.slug', $categoryOnlyResource->slug)
+            ->has('resources.data', 2)
+            ->where('resources.data.0.slug', $sharedResource->slug)
+            ->where('resources.data.1.slug', $categoryOnlyResource->slug)
         );
 });
 
@@ -147,7 +225,7 @@ it('renders an empty category page when the category has no resources', function
             ->component('categories/show')
             ->where('category.name', $category->name)
             ->where('category.resourceCount', 0)
-            ->has('resources', 0)
+            ->has('resources.data', 0)
         );
 });
 
@@ -211,4 +289,27 @@ it('renders the resource page header from backend resources', function () {
         );
 
     expect($resource->fresh()->view_count)->toBe(1);
+});
+
+it('sanitizes resource detail content before sharing it with the frontend', function () {
+    $author = User::query()->create([
+        'name' => '安全作者',
+        'email' => 'safe-content-author@example.com',
+        'password' => 'password',
+        'email_verified_at' => now(),
+    ]);
+
+    $resource = Resource::query()->create([
+        'title' => '安全详情资源',
+        'thumbnail_path' => 'https://example.com/safe-content.jpg',
+        'user_id' => $author->id,
+        'content' => '<p onclick="alert(1)">安全内容</p><script>alert(1)</script><a href="javascript:alert(1)">危险链接</a>',
+    ])->refresh();
+
+    $this->get(route('resources.show', ['slug' => $resource->slug]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('resources/show')
+            ->where('resource.content', '<p>安全内容</p><a>危险链接</a>')
+        );
 });

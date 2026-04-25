@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Schema;
  */
 class SiteSetting extends Model
 {
+    private static ?bool $hasSettingsTable = null;
+
     protected $fillable = [
         'site_url',
         'logo_text',
@@ -97,7 +99,7 @@ class SiteSetting extends Model
      */
     public static function shared(): array
     {
-        if (! Schema::hasTable('site_settings')) {
+        if (! static::hasSettingsTable()) {
             return [
                 'name' => (string) config('app.name'),
                 'url' => (string) config('app.url'),
@@ -170,6 +172,11 @@ class SiteSetting extends Model
             ])
             ->values()
             ->all();
+    }
+
+    private static function hasSettingsTable(): bool
+    {
+        return static::$hasSettingsTable ??= Schema::hasTable('site_settings');
     }
 
     public function getLogoUrlAttribute(): ?string

@@ -40,7 +40,7 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-                {user.email === 'admin@admin.com' && (
+                {user.can_access_admin_panel && (
                     <DropdownMenuItem asChild>
                         <a
                             className="block w-full cursor-pointer"

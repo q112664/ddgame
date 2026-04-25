@@ -4,6 +4,7 @@ export type User = {
     email: string;
     avatar: string | null;
     signature: string | null;
+    can_access_admin_panel: boolean;
     email_verified_at: string | null;
 };
 

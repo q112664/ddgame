@@ -24,6 +24,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+    contentPanelClass,
+    contentPanelDividerClass,
+    contentPanelStripClass,
+    contentPanelTabsTriggerClass,
+} from '@/lib/content-panel';
 import { useInitials } from '@/hooks/use-initials';
 import { buildResourceFavoriteOptimisticProps } from '@/lib/resource-favorite-optimistic';
 import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
@@ -44,11 +50,6 @@ const detailTagToneClass =
     'border-[#fb7299]/25 bg-[#fb7299]/10 text-[#fb7299] dark:border-[#fb7299]/30 dark:bg-[#fb7299]/14 dark:text-[#ff8fb0]';
 const favoriteAuthToastId = 'resource-favorite-auth-required';
 const favoriteUpdateToastId = 'resource-favorite-update';
-const contentPanelClass =
-    'rounded-xl bg-white shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)] dark:bg-zinc-800';
-const contentPanelDividerClass = 'border-gray-200 dark:border-zinc-700';
-const contentPanelStripClass =
-    'bg-white shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)] dark:bg-zinc-800';
 
 const sectionMeta: Record<
     ResourceSection,
@@ -384,7 +385,7 @@ export default function ResourceShow({
                                     key={item.value}
                                     value={item.value}
                                     asChild
-                                    className="rounded-md px-4.25 text-[14px] data-active:border-transparent data-active:bg-transparent group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-transparent dark:data-active:text-foreground"
+                                    className={contentPanelTabsTriggerClass}
                                 >
                                     <Link
                                         href={item.href}

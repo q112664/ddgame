@@ -49,7 +49,7 @@ class FrontendResourceSerializer
     {
         return [
             ...static::summary($resource),
-            'content' => $resource->content,
+            'content' => SanitizedHtml::clean($resource->content),
             'viewCount' => $resource->view_count,
             'favoriteCount' => $resource->favorited_by_users_count ?? $resource->favoritedByUsers()->count(),
             'favoritedByCurrentUser' => (bool) ($resource->is_favorited_by_current_user ?? false),

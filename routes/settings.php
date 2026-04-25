@@ -4,9 +4,10 @@ use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('users/{user}', [ProfileController::class, 'showPublic'])->name('users.show');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::get('users/{user}', [ProfileController::class, 'showPublic'])->name('users.show');
     Route::get('users/{user}/favorites', [ProfileController::class, 'showFavorites'])->name('users.favorites');
     Route::get('users/{user}/comments', [ProfileController::class, 'showComments'])->name('users.comments');
 

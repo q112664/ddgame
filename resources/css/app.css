@@ -49,38 +49,42 @@
     --card-hover: #f8fbfd;
     --card-active: #eef7fb;
     --font-sans:
-        'Noto Sans SC',
-        'Noto Sans',
-        'PingFang SC',
-        'Microsoft YaHei',
+        'Noto Sans SC', 'Noto Sans', 'PingFang SC', 'Microsoft YaHei',
         sans-serif;
     --font-serif: 'Noto Serif SC', 'Source Han Serif SC', serif;
     --font-mono:
-        'Noto Sans Mono',
-        'SFMono-Regular',
-        Consolas,
-        'Liberation Mono',
+        'Noto Sans Mono', 'SFMono-Regular', Consolas, 'Liberation Mono',
         monospace;
     --font-heading: Cinzel, 'Times New Roman', serif;
     --radius: 0.625rem;
     --shadow-x: 0px;
-    --shadow-y: 8px;
-    --shadow-blur: 24px;
+    --shadow-y: 1px;
+    --shadow-blur: 3px;
     --shadow-spread: 0px;
-    --shadow-opacity: 0.08;
+    --shadow-opacity: 0.1;
     --shadow-color: #000000;
-    --shadow-2xs: 0px 2px 8px 0px rgb(0 0 0 / 0.04);
-    --shadow-xs: 0px 4px 12px 0px rgb(0 0 0 / 0.05);
-    --shadow-sm: 0px 8px 24px 0px rgb(0 0 0 / 0.08);
-    --shadow: 0px 8px 24px 0px rgb(0 0 0 / 0.08);
-    --shadow-md: 0px 12px 32px 0px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0px 18px 40px 0px rgb(0 0 0 / 0.12);
-    --shadow-xl: 0px 24px 48px 0px rgb(0 0 0 / 0.14);
-    --shadow-2xl: 0px 32px 64px 0px rgb(0 0 0 / 0.18);
+    --shadow-2xs: 0px 1px 2px 0px rgb(0 0 0 / 0.05);
+    --shadow-xs: 0px 1px 3px 0px rgb(0 0 0 / 0.08);
+    --shadow-sm:
+        0px 1px 3px 0px rgb(0 0 0 / 0.1),
+        0px 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow:
+        0px 1px 3px 0px rgb(0 0 0 / 0.1),
+        0px 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md:
+        0px 4px 6px -1px rgb(0 0 0 / 0.1),
+        0px 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg:
+        0px 10px 15px -3px rgb(0 0 0 / 0.1),
+        0px 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl:
+        0px 20px 25px -5px rgb(0 0 0 / 0.1),
+        0px 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0px 25px 50px -12px rgb(0 0 0 / 0.25);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
     --shadow-offset-x: 0px;
-    --shadow-offset-y: 8px;
+    --shadow-offset-y: 1px;
     --letter-spacing: 0em;
 }
 
@@ -123,36 +127,40 @@
     --card-hover: #20272c;
     --card-active: #182027;
     --font-sans:
-        'Noto Sans SC',
-        'Noto Sans',
-        'PingFang SC',
-        'Microsoft YaHei',
+        'Noto Sans SC', 'Noto Sans', 'PingFang SC', 'Microsoft YaHei',
         sans-serif;
     --font-serif: 'Noto Serif SC', 'Source Han Serif SC', serif;
     --font-mono:
-        'Noto Sans Mono',
-        'SFMono-Regular',
-        Consolas,
-        'Liberation Mono',
+        'Noto Sans Mono', 'SFMono-Regular', Consolas, 'Liberation Mono',
         monospace;
     --font-heading: Cinzel, 'Times New Roman', serif;
     --radius: 0.625rem;
     --shadow-x: 0px;
-    --shadow-y: 12px;
-    --shadow-blur: 28px;
+    --shadow-y: 1px;
+    --shadow-blur: 3px;
     --shadow-spread: 0px;
-    --shadow-opacity: 0.32;
+    --shadow-opacity: 0.3;
     --shadow-color: #000000;
-    --shadow-2xs: 0px 6px 16px 0px rgb(0 0 0 / 0.18);
-    --shadow-xs: 0px 8px 20px 0px rgb(0 0 0 / 0.2);
-    --shadow-sm: 0px 12px 28px 0px rgb(0 0 0 / 0.24);
-    --shadow: 0px 12px 28px 0px rgb(0 0 0 / 0.24);
-    --shadow-md: 0px 18px 40px 0px rgb(0 0 0 / 0.28);
-    --shadow-lg: 0px 24px 48px 0px rgb(0 0 0 / 0.32);
-    --shadow-xl: 0px 32px 64px 0px rgb(0 0 0 / 0.36);
-    --shadow-2xl: 0px 40px 72px 0px rgb(0 0 0 / 0.42);
+    --shadow-2xs: 0px 1px 2px 0px rgb(0 0 0 / 0.18);
+    --shadow-xs: 0px 1px 3px 0px rgb(0 0 0 / 0.24);
+    --shadow-sm:
+        0px 1px 3px 0px rgb(0 0 0 / 0.3),
+        0px 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow:
+        0px 1px 3px 0px rgb(0 0 0 / 0.3),
+        0px 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow-md:
+        0px 4px 6px -1px rgb(0 0 0 / 0.32),
+        0px 2px 4px -2px rgb(0 0 0 / 0.32);
+    --shadow-lg:
+        0px 10px 15px -3px rgb(0 0 0 / 0.35),
+        0px 4px 6px -4px rgb(0 0 0 / 0.35);
+    --shadow-xl:
+        0px 20px 25px -5px rgb(0 0 0 / 0.38),
+        0px 8px 10px -6px rgb(0 0 0 / 0.38);
+    --shadow-2xl: 0px 25px 50px -12px rgb(0 0 0 / 0.5);
     --shadow-offset-x: 0px;
-    --shadow-offset-y: 12px;
+    --shadow-offset-y: 1px;
     --letter-spacing: 0em;
     --spacing: 0.25rem;
 }
@@ -192,16 +200,10 @@
     --color-sidebar-ring: var(--sidebar-ring);
     --font-heading: Cinzel, 'Times New Roman', serif;
     --font-sans:
-        'Noto Sans SC',
-        'Noto Sans',
-        'PingFang SC',
-        'Microsoft YaHei',
+        'Noto Sans SC', 'Noto Sans', 'PingFang SC', 'Microsoft YaHei',
         sans-serif;
     --font-mono:
-        'Noto Sans Mono',
-        'SFMono-Regular',
-        Consolas,
-        'Liberation Mono',
+        'Noto Sans Mono', 'SFMono-Regular', Consolas, 'Liberation Mono',
         monospace;
     --font-serif: 'Noto Serif SC', 'Source Han Serif SC', serif;
     --radius-sm: calc(var(--radius) - 0.25rem);

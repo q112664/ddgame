@@ -4,6 +4,11 @@ import { LayoutGroup, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCurrentUrl } from '@/hooks/use-current-url';
+import {
+    contentPanelClass,
+    contentPanelStripClass,
+    contentPanelTabsTriggerClass,
+} from '@/lib/content-panel';
 import { toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance/index';
 import { edit as editProfile } from '@/routes/profile/index';
@@ -42,11 +47,11 @@ export default function FrontSettingsLayout({
     }, [activeValue]);
 
     return (
-        <div className="space-y-6 px-1 py-4">
+        <div className="space-y-6 py-4">
             <Tabs value={pendingValue} className="gap-0">
                 <LayoutGroup id="front-settings-tabs">
                     <TabsList
-                        className="w-full justify-start rounded-lg p-0.75 group-data-horizontal/tabs:h-10.5 dark:bg-white/[0.045]"
+                        className={`w-full justify-start rounded-lg p-0.75 group-data-horizontal/tabs:h-10.5 ${contentPanelStripClass}`}
                         aria-label="前台设置导航"
                     >
                         {navItems.map((item) => {
@@ -57,7 +62,7 @@ export default function FrontSettingsLayout({
                                     key={itemValue}
                                     value={itemValue}
                                     asChild
-                                    className="rounded-md px-4.25 text-[14px] data-active:border-transparent data-active:bg-transparent group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-transparent dark:data-active:text-foreground"
+                                    className={contentPanelTabsTriggerClass}
                                 >
                                     <Link
                                         href={item.href}
@@ -94,7 +99,9 @@ export default function FrontSettingsLayout({
                 </LayoutGroup>
             </Tabs>
 
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6 lg:p-8">
+            <div
+                className={`${contentPanelClass} p-5 sm:p-6 lg:p-8`}
+            >
                 {children}
             </div>
         </div>

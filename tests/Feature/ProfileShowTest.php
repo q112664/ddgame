@@ -70,11 +70,7 @@ test('authenticated users can view their profile summary page', function () {
         );
 });
 
-test('authenticated users can view another users public profile page', function () {
-    $viewer = User::factory()->create([
-        'name' => 'Asuna',
-        'email' => 'asuna@example.com',
-    ]);
+test('guests can view another users public profile page', function () {
     $profileOwner = User::factory()->create([
         'name' => 'Sinon',
         'email' => 'sinon@example.com',
@@ -110,8 +106,7 @@ test('authenticated users can view another users public profile page', function 
     $favoritedResource->tags()->attach($tag);
     $profileOwner->favoriteResources()->attach($favoritedResource);
 
-    $this->actingAs($viewer)
-        ->get(route('users.show', $profileOwner))
+    $this->get(route('users.show', $profileOwner))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('profile/show')
@@ -131,11 +126,29 @@ test('authenticated users can view another users public profile page', function 
         );
 });
 
-test('guests cannot view another users public profile page', function () {
+test('guests cannot view private profile tabs', function (string $routeName) {
+    $profileOwner = User::factory()->create();
+
+    $this->get(route($routeName, $profileOwner))
+        ->assertRedirect(route('login'));
+})->with([
+    'favorites' => 'users.favorites',
+    'comments' => 'users.comments',
+]);
+
+test('guests can view another users public profile page without private tabs', function () {
     $user = User::factory()->create();
 
     $this->get(route('users.show', $user))
-        ->assertRedirect(route('login'));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('profile/show')
+            ->where('profileUser.id', $user->id)
+            ->where('isOwnProfile', false)
+            ->where('activeTab', 'submissions')
+            ->where('availableTabs', ['submissions'])
+            ->missing('collections.favorites')
+        );
 });
 
 test('authenticated users can view their favorites tab on the unified profile page', function () {
@@ -235,9 +248,7 @@ test('users can view their own unified profile page from the users route', funct
 });
 
 test('admin users receive the admin level on the profile summary page', function () {
-    $user = User::factory()->create([
-        'email' => 'admin@admin.com',
-    ]);
+    $user = User::factory()->admin()->create();
 
     $this->actingAs($user)
         ->get(route('users.show', $user))

@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -24,6 +25,8 @@ class UserForm
                     ->required(),
                 DateTimePicker::make('email_verified_at')
                     ->label('邮箱验证时间'),
+                Checkbox::make('is_admin')
+                    ->label('管理员'),
                 TextInput::make('password')
                     ->label('密码')
                     ->password()

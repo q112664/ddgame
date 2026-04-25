@@ -31,6 +31,10 @@ class UsersTable
                     ->label('已验证')
                     ->boolean()
                     ->sortable(),
+                IconColumn::make('is_admin')
+                    ->label('管理员')
+                    ->boolean()
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label('创建时间')
                     ->dateTime()

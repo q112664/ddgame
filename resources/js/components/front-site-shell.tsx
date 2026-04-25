@@ -53,7 +53,7 @@ function SiteNavigationLink({
             <a
                 href={item.url}
                 target={item.openInNewTab ? '_blank' : undefined}
-                rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
+                rel={isExternalUrl(item.url) ? 'noopener noreferrer' : undefined}
                 className={className}
             >
                 {children}

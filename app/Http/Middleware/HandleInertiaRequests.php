@@ -57,6 +57,7 @@ class HandleInertiaRequests extends Middleware
      *     email: string,
      *     avatar: ?string,
      *     signature: ?string,
+     *     can_access_admin_panel: bool,
      *     email_verified_at: ?string
      * }|null
      */
@@ -74,6 +75,7 @@ class HandleInertiaRequests extends Middleware
             'email' => $user->email,
             'avatar' => $user->avatar,
             'signature' => $user->signature,
+            'can_access_admin_panel' => $user->isAdmin(),
             'email_verified_at' => $user->email_verified_at?->toIso8601String(),
         ];
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Resource;
+use App\Models\ResourceCategory;
 use App\Support\FrontendResourceSerializer;
 use App\Support\ResourceViewRecorder;
 use Illuminate\Http\Request;
@@ -15,15 +16,42 @@ class ResourcePageController extends Controller
         private ResourceViewRecorder $resourceViewRecorder,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $category = $request->string('category')->toString();
+        $sort = $request->string('sort', 'latest')->toString();
+
         return Inertia::render('resources/index', [
-            'resources' => FrontendResourceSerializer::summaries(
-                Resource::query()
-                    ->with(['categories', 'author', 'tags'])
-                    ->latest('published_at')
-                    ->get(),
-            ),
+            'resources' => Resource::query()
+                ->with(['categories', 'author', 'tags'])
+                ->when($category !== '', fn ($query) => $query->whereHas(
+                    'categories',
+                    fn ($categoryQuery) => $categoryQuery->where('slug', $category),
+                ))
+                ->when(
+                    $sort === 'oldest',
+                    fn ($query) => $query->oldest('published_at'),
+                    fn ($query) => $query->latest($sort === 'views' ? 'view_count' : 'published_at'),
+                )
+                ->paginate(24)
+                ->withQueryString()
+                ->through(fn (Resource $resource): array => FrontendResourceSerializer::summary($resource)),
+            'filters' => [
+                'category' => $category,
+                'sort' => in_array($sort, ['latest', 'oldest', 'views'], true) ? $sort : 'latest',
+            ],
+            'filterOptions' => [
+                'categories' => ResourceCategory::query()
+                    ->ordered()
+                    ->get(['name', 'slug'])
+                    ->map(fn (ResourceCategory $category): array => [
+                        'label' => $category->name,
+                        'value' => $category->slug,
+                    ])
+                    ->prepend(['label' => '全部', 'value' => ''])
+                    ->values()
+                    ->all(),
+            ],
         ]);
     }
 

@@ -18,7 +18,7 @@ export default function AuthSimpleLayout({
         <FrontSiteShell>
             <div className="flex min-h-[70vh] items-center justify-center py-6 sm:py-10">
                 <div className="w-full max-w-sm">
-                    <div className="flex flex-col gap-8 rounded-2xl border border-border/60 bg-card p-6 shadow-sm sm:p-8">
+                    <div className="flex flex-col gap-8 rounded-2xl border border-border/60 bg-card p-6 shadow-md sm:p-8">
                         <div className="flex flex-col items-center gap-4">
                             <Link
                                 href={home()}

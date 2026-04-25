@@ -1,7 +1,10 @@
 import { Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
+import { formatResourceRelativeTime } from '@/lib/resource-time';
 import { cn } from '@/lib/utils';
+import { useInitials } from '@/hooks/use-initials';
 import { show as showResource } from '@/routes/resources/index';
 import type { FrontendResource } from '@/types';
 
@@ -30,11 +33,17 @@ function ResourceCard({
     title,
     thumbnail,
     categories,
+    author,
+    authorAvatar,
+    publishedAt,
 }: FrontendResource) {
+    const getInitials = useInitials();
+    const relativeTime = formatResourceRelativeTime(publishedAt);
+
     return (
         <Link
             href={showResource({ slug })}
-            className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-200 hover:bg-primary/5 dark:hover:bg-primary/10 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-xs transition-all duration-200 hover:bg-primary/5 dark:hover:bg-primary/10 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
             <div className="relative h-44 overflow-hidden leading-none">
                 <img
@@ -62,6 +71,30 @@ function ResourceCard({
                                 {category.name}
                             </ResourceCategoryBadge>
                         ))}
+                    </div>
+
+                    <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                        <Avatar
+                            size="sm"
+                            className="size-5 bg-muted"
+                        >
+                            <AvatarImage
+                                src={authorAvatar ?? undefined}
+                                alt={author}
+                            />
+                            <AvatarFallback className="text-[10px] font-medium">
+                                {getInitials(author)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                            <span className="truncate font-medium text-foreground/70">
+                                {author}
+                            </span>
+                            <span className="shrink-0 text-muted-foreground/60">
+                                ·
+                            </span>
+                            <span className="shrink-0">{relativeTime}</span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -28,12 +28,16 @@ test('shared inertia props expose a minimal authenticated user payload', functio
                 'name',
                 'email',
                 'avatar',
+                'signature',
+                'can_access_admin_panel',
                 'email_verified_at',
             ])
             ->where('auth.user.id', $user->id)
             ->where('auth.user.name', $user->name)
             ->where('auth.user.email', $user->email)
             ->where('auth.user.avatar', null)
+            ->where('auth.user.signature', null)
+            ->where('auth.user.can_access_admin_panel', false)
             ->where('auth.user.email_verified_at', $user->email_verified_at?->toIso8601String()),
         );
 });

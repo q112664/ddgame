@@ -20,3 +20,7 @@ export type FrontendResource = {
     favoriteCount?: number;
     favoritedByCurrentUser?: boolean;
 };
+
+export type PaginatedResources = {
+    data: FrontendResource[];
+};

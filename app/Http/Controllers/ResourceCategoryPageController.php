@@ -14,16 +14,18 @@ class ResourceCategoryPageController extends Controller
         $resources = $category->resources()
             ->with(['categories', 'author', 'tags'])
             ->latest('published_at')
-            ->get();
+            ->paginate(24)
+            ->withQueryString()
+            ->through(fn ($resource): array => FrontendResourceSerializer::summary($resource));
 
         return Inertia::render('categories/show', [
             'category' => [
                 'name' => $category->name,
                 'slug' => $category->slug,
                 'color' => $category->color?->value ?? 'sky',
-                'resourceCount' => $resources->count(),
+                'resourceCount' => $resources->total(),
             ],
-            'resources' => FrontendResourceSerializer::summaries($resources),
+            'resources' => $resources,
         ]);
     }
 }

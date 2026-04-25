@@ -79,8 +79,7 @@ it('allows published_at to be updated manually after the resource is created', f
 });
 
 it('defaults the resource author to the currently logged-in admin', function () {
-    $admin = User::factory()->create([
-        'email' => 'admin@admin.com',
+    $admin = User::factory()->admin()->create([
         'email_verified_at' => now(),
     ]);
 

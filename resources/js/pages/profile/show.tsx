@@ -12,6 +12,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+    contentPanelClass,
+    contentPanelStripClass,
+    contentPanelTabsTriggerClass,
+} from '@/lib/content-panel';
 import { useInitials } from '@/hooks/use-initials';
 import { buildProfileFavoriteOptimisticProps } from '@/lib/profile-favorite-optimistic';
 import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
@@ -184,7 +189,7 @@ function ProfileResourceCard({
     );
 }
 
-const profileSurfaceClass = 'rounded-xl border border-border bg-card shadow-xs';
+const profileSurfaceClass = contentPanelClass;
 
 export default function ProfileShow({
     profileUser,
@@ -356,7 +361,7 @@ export default function ProfileShow({
                     <Tabs value={currentTab} className="gap-4">
                         <LayoutGroup id="profile-resource-tabs">
                             <TabsList
-                                className="w-full justify-start rounded-lg p-0.75 group-data-horizontal/tabs:h-10.5 dark:bg-white/[0.045]"
+                                className={`w-full justify-start rounded-lg p-0.75 group-data-horizontal/tabs:h-10.5 ${contentPanelStripClass}`}
                                 aria-label="个人资源分区"
                             >
                                 {visibleTabItems.map((item) => (
@@ -365,11 +370,11 @@ export default function ProfileShow({
                                     value={item.value}
                                     asChild
                                     className={cn(
-                                        'rounded-md px-4.25 text-[14px] data-active:border-transparent data-active:bg-transparent group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-transparent dark:data-active:text-foreground',
+                                        contentPanelTabsTriggerClass,
                                         isTabTransitioning
                                             ? pendingTab === item.value
                                                 ? '!text-foreground dark:!text-foreground'
-                                                : '!text-foreground/60 dark:!text-muted-foreground'
+                                            : '!text-foreground/60 dark:!text-muted-foreground'
                                             : null,
                                     )}
                                 >

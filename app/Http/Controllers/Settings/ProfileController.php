@@ -132,7 +132,7 @@ class ProfileController extends Controller
 
     private function renderProfileTab(Request $request, User $user, string $activeTab): Response|RedirectResponse
     {
-        $isOwnProfile = $request->user()->is($user);
+        $isOwnProfile = $request->user()?->is($user) ?? false;
 
         if (! $this->tabIsAvailable($activeTab, $isOwnProfile)) {
             return to_route('users.show', $user);
@@ -199,9 +199,7 @@ class ProfileController extends Controller
             ],
             'profile' => [
                 'joinedAt' => $user->created_at?->toDateString(),
-                'level' => strtolower((string) $user->email) === 'admin@admin.com'
-                    ? '管理员'
-                    : '用户',
+                'level' => $user->isAdmin() ? '管理员' : '用户',
             ],
             'stats' => [
                 [

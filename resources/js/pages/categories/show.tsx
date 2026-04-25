@@ -6,7 +6,7 @@ import {
 } from '@/components/resource-card-grid';
 import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
 import type { ResourceCategoryColor } from '@/lib/resource-category-colors';
-import type { FrontendResource } from '@/types';
+import type { PaginatedResources } from '@/types';
 
 type FrontendCategoryPage = {
     name: string;
@@ -18,7 +18,7 @@ type FrontendCategoryPage = {
 export default function CategoryShow() {
     const { category, resources } = usePage<{
         category: FrontendCategoryPage;
-        resources: FrontendResource[];
+        resources: PaginatedResources;
     }>().props;
 
     return (
@@ -54,7 +54,7 @@ export default function CategoryShow() {
                     </section>
 
                     <ResourceCardGrid
-                        resources={resources}
+                        resources={resources.data}
                         emptyTitle={`${category.name} 分类下还没有资源`}
                         emptyDescription="这个分类已经创建完成，但目前还没有资源被归入这里。"
                     />
