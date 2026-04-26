@@ -1,6 +1,8 @@
 import { Link, useForm } from '@inertiajs/react';
 import { MessageCircle, MessageSquareReply, Send, ThumbsUp } from 'lucide-react';
 import { useState } from 'react';
+import { RichTextContent } from '@/components/rich-text/rich-text-content';
+import { RichTextEditor } from '@/components/rich-text/rich-text-editor';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
@@ -9,9 +11,10 @@ import {
     buildCommentLikeOptimisticProps,
     type CommentLikePageProps,
 } from '@/lib/comment-like-optimistic';
+import { getRichTextPlainText, isRichTextEmpty } from '@/lib/rich-text';
 import { formatRelativeTime } from '@/lib/resource-time';
 import { login } from '@/routes';
-import type { FrontendComment, User } from '@/types';
+import type { FrontendComment, SiteEmojiPack, User } from '@/types';
 
 type CommentThreadRoutes = {
     store: string;
@@ -23,12 +26,14 @@ type CommentThreadProps = {
     comments: FrontendComment[];
     currentUser: User | null;
     routes: CommentThreadRoutes;
+    emojiPacks?: SiteEmojiPack[];
     emptyText?: string;
 };
 
 type ActiveReplyTarget = {
     id: number;
     author: string;
+    rootId: number;
 };
 
 const bodyMaxLength = 500;
@@ -57,6 +62,8 @@ function CommentComposer({
     placeholder,
     processing,
     submitLabel,
+    editorSurface = 'transparent',
+    emojiPacks = [],
     onChange,
     onCancel,
     onSubmit,
@@ -66,30 +73,37 @@ function CommentComposer({
     placeholder: string;
     processing: boolean;
     submitLabel: string;
+    editorSurface?: 'transparent' | 'card';
+    emojiPacks?: SiteEmojiPack[];
     onChange: (value: string) => void;
     onCancel?: () => void;
     onSubmit: () => void;
 }) {
+    const textLength = getRichTextPlainText(value).length;
+    const hasExceededLimit = textLength > bodyMaxLength;
+
     return (
         <div className="space-y-3">
-            <textarea
-                className="min-h-20 w-full resize-none rounded-lg border border-input bg-transparent px-3 py-2.5 text-sm leading-6 transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-transparent"
+            <RichTextEditor
                 placeholder={placeholder}
                 value={value}
                 maxLength={bodyMaxLength}
-                onChange={(event) => onChange(event.target.value)}
-                aria-invalid={error ? true : undefined}
+                error={error}
+                disabled={processing}
+                showFocusRing={false}
+                surface={editorSurface}
+                enableSiteEmojis={emojiPacks.length > 0}
+                emojiPacks={emojiPacks}
+                onChange={onChange}
             />
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-xs text-muted-foreground">
-                    {error ? (
-                        <span className="text-destructive">{error}</span>
-                    ) : (
-                        <span>
-                            {value.length}/{bodyMaxLength}
+                <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    {hasExceededLimit ? (
+                        <span className="text-destructive">
+                            评论最多 {bodyMaxLength} 个字符
                         </span>
-                    )}
+                    ) : null}
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -106,7 +120,11 @@ function CommentComposer({
                     <Button
                         type="button"
                         size="sm"
-                        disabled={processing || value.trim().length === 0}
+                        disabled={
+                            processing ||
+                            isRichTextEmpty(value) ||
+                            hasExceededLimit
+                        }
                         onClick={onSubmit}
                     >
                         <Send className="size-3.5" aria-hidden="true" />
@@ -121,11 +139,13 @@ function CommentComposer({
 function CommentItem({
     comment,
     isReply = false,
+    rootId,
     floorNumber,
     activeReplyTarget,
     replyBody,
     replyError,
     replyProcessing,
+    emojiPacks,
     pendingLikeId,
     getInitials,
     onReplyToggle,
@@ -138,11 +158,13 @@ function CommentItem({
 }: {
     comment: FrontendComment;
     isReply?: boolean;
+    rootId?: number;
     floorNumber?: number;
     activeReplyTarget: ActiveReplyTarget | null;
     replyBody: string;
     replyError?: string;
     replyProcessing: boolean;
+    emojiPacks: SiteEmojiPack[];
     pendingLikeId: number | null;
     getInitials: (name: string) => string;
     onReplyToggle: (target: ActiveReplyTarget) => void;
@@ -174,6 +196,7 @@ function CommentItem({
             ? comment.replies.slice(0, previewReplyCount)
             : comment.replies;
     const collapsedReplyCount = comment.replies.length - previewReplyCount;
+    const currentRootId = rootId ?? comment.id;
 
     return (
         <article
@@ -241,15 +264,14 @@ function CommentItem({
                             </div>
                         </div>
 
-                        <div
+                        <RichTextContent
+                            html={comment.body}
                             className={
                                 isReply
-                                    ? 'mt-0.5 break-words text-sm leading-6 text-foreground/88'
-                                    : 'mt-3 break-words text-[15px] leading-7 font-medium text-foreground/90 sm:text-base'
+                                    ? 'mt-0.5 text-sm leading-6 text-foreground/88'
+                                    : 'mt-3 text-[15px] leading-7 font-medium text-foreground/90 sm:text-base'
                             }
-                        >
-                            <p>{comment.body}</p>
-                        </div>
+                        />
                     </div>
                 </div>
 
@@ -306,6 +328,7 @@ function CommentItem({
                                 onReplyToggle({
                                     id: comment.id,
                                     author: comment.author.name,
+                                    rootId: currentRootId,
                                 })
                             }
                         >
@@ -332,6 +355,7 @@ function CommentItem({
                                 onReplyToggle({
                                     id: comment.id,
                                     author: comment.author.name,
+                                    rootId: currentRootId,
                                 })
                             }
                         >
@@ -348,6 +372,8 @@ function CommentItem({
                             placeholder={`回复 ${comment.author.name}…`}
                             processing={replyProcessing}
                             submitLabel="提交回复"
+                            editorSurface="card"
+                            emojiPacks={emojiPacks}
                             onChange={onReplyBodyChange}
                             onCancel={onReplyCancel}
                             onSubmit={onReplySubmit}
@@ -369,6 +395,8 @@ function CommentItem({
                                     placeholder={`回复 ${comment.author.name}…`}
                                     processing={replyProcessing}
                                     submitLabel="提交回复"
+                                    editorSurface="card"
+                                    emojiPacks={emojiPacks}
                                     onChange={onReplyBodyChange}
                                     onCancel={onReplyCancel}
                                     onSubmit={onReplySubmit}
@@ -386,6 +414,7 @@ function CommentItem({
                                     replyBody={replyBody}
                                     replyError={replyError}
                                     replyProcessing={replyProcessing}
+                                    emojiPacks={emojiPacks}
                                     pendingLikeId={pendingLikeId}
                                     getInitials={getInitials}
                                     onReplyToggle={onReplyToggle}
@@ -395,6 +424,7 @@ function CommentItem({
                                     onLikeToggle={onLikeToggle}
                                     expandedReplyIds={expandedReplyIds}
                                     onReplyListToggle={onReplyListToggle}
+                                    rootId={comment.id}
                                 />
                             ))}
                         </div>
@@ -423,6 +453,7 @@ export function CommentThread({
     comments,
     currentUser,
     routes,
+    emojiPacks = [],
     emptyText = '还没有评论，来做第一个留下想法的人吧。',
 }: CommentThreadProps) {
     const getInitials = useInitials();
@@ -458,6 +489,7 @@ export function CommentThread({
             preserveScroll: true,
             onSuccess: () => {
                 commentForm.reset('body');
+                commentForm.setData('body', '');
             },
         });
     };
@@ -499,11 +531,20 @@ export function CommentThread({
             return;
         }
 
-        replyForm.post(routes.reply(activeReplyTarget.id), {
+        const replyTarget = activeReplyTarget;
+
+        replyForm.post(routes.reply(replyTarget.id), {
             preserveScroll: true,
             onSuccess: () => {
+                setExpandedReplyIds((currentIds) => {
+                    const nextIds = new Set(currentIds);
+                    nextIds.add(replyTarget.rootId);
+
+                    return nextIds;
+                });
                 setActiveReplyTarget(null);
                 replyForm.reset('body');
+                replyForm.setData('body', '');
             },
         });
     };
@@ -564,6 +605,7 @@ export function CommentThread({
                     placeholder="写下你的评论…"
                     processing={commentForm.processing}
                     submitLabel="提交"
+                    emojiPacks={emojiPacks}
                     onChange={(value) => commentForm.setData('body', value)}
                     onSubmit={handleCommentSubmit}
                 />
@@ -591,11 +633,12 @@ export function CommentThread({
                         <CommentItem
                             key={comment.id}
                             comment={comment}
-                            floorNumber={index + 1}
+                            floorNumber={comment.floorNumber ?? index + 1}
                             activeReplyTarget={activeReplyTarget}
                             replyBody={replyForm.data.body}
                             replyError={replyForm.errors.body}
                             replyProcessing={replyForm.processing}
+                            emojiPacks={emojiPacks}
                             pendingLikeId={pendingLikeId}
                             getInitials={getInitials}
                             onReplyToggle={handleReplyToggle}

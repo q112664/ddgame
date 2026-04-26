@@ -1,5 +1,6 @@
 export type * from './auth';
 export type * from './comment';
+export type * from './emoji';
 export type * from './flash';
 export type * from './navigation';
 export type * from './resource';

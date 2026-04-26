@@ -8,6 +8,7 @@ import {
 import { LayoutGroup, motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
+import { RichTextContent } from '@/components/rich-text/rich-text-content';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -235,9 +236,10 @@ function ProfileCommentCard({ comment }: { comment: FrontendProfileComment }) {
                         ) : null}
                     </div>
 
-                    <p className="break-words text-sm leading-7 text-foreground/88">
-                        {comment.body}
-                    </p>
+                    <RichTextContent
+                        html={comment.body}
+                        className="text-sm leading-7 text-foreground/88"
+                    />
 
                     {resource ? (
                         <Button

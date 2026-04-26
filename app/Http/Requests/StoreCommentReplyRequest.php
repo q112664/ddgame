@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\SanitizedHtml;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreCommentReplyRequest extends FormRequest
 {
@@ -10,7 +12,7 @@ class StoreCommentReplyRequest extends FormRequest
     {
         if (is_string($this->input('body'))) {
             $this->merge([
-                'body' => trim($this->input('body')),
+                'body' => SanitizedHtml::cleanComment(trim($this->input('body'))),
             ]);
         }
     }
@@ -31,7 +33,29 @@ class StoreCommentReplyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['required', 'string', 'max:500'],
+            'body' => ['required', 'string'],
+        ];
+    }
+
+    /**
+     * Get the "after" validation callables for the request.
+     *
+     * @return list<callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                $length = mb_strlen(SanitizedHtml::plainText($this->string('body')->toString()));
+
+                if ($length === 0) {
+                    $validator->errors()->add('body', '回复内容不能为空。');
+                }
+
+                if ($length > 500) {
+                    $validator->errors()->add('body', '回复内容不能超过 500 个字符。');
+                }
+            },
         ];
     }
 }

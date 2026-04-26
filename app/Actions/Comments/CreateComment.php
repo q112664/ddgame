@@ -4,6 +4,7 @@ namespace App\Actions\Comments;
 
 use App\Models\Comment;
 use App\Models\User;
+use App\Support\SanitizedHtml;
 use Illuminate\Database\Eloquent\Model;
 
 class CreateComment
@@ -16,7 +17,7 @@ class CreateComment
         /** @var Comment $comment */
         $comment = $commentable->comments()->create([
             'user_id' => $author->getKey(),
-            'body' => $body,
+            'body' => SanitizedHtml::cleanComment($body) ?? '',
         ]);
 
         return $comment;
@@ -31,7 +32,7 @@ class CreateComment
             'user_id' => $author->getKey(),
             'parent_id' => $parent->getKey(),
             'root_id' => $parent->root_id ?? $parent->getKey(),
-            'body' => $body,
+            'body' => SanitizedHtml::cleanComment($body) ?? '',
         ]);
 
         return $comment;

@@ -10,6 +10,7 @@ export type FrontendComment = {
     id: number;
     body: string;
     createdAt: string | null;
+    floorNumber: number | null;
     parentId: number | null;
     replyTo: string | null;
     author: FrontendCommentAuthor;

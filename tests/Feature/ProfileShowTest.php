@@ -208,7 +208,7 @@ test('authenticated users can view their comments tab on the unified profile pag
     ]);
     $comment = $resource->comments()->create([
         'user_id' => $user->id,
-        'body' => '这条评论会展示在个人页。',
+        'body' => '<p>这条 <strong>评论</strong> 会展示在个人页。<script>alert(1)</script></p>',
     ]);
 
     $this->actingAs($user)
@@ -222,7 +222,7 @@ test('authenticated users can view their comments tab on the unified profile pag
             ->where('availableTabs', ['submissions', 'favorites', 'comments'])
             ->where('stats.2.value', 1)
             ->where('collections.comments.0.id', $comment->id)
-            ->where('collections.comments.0.body', '这条评论会展示在个人页。')
+            ->where('collections.comments.0.body', '<p>这条 <strong>评论</strong> 会展示在个人页。</p>')
             ->where('collections.comments.0.resource.slug', $resource->slug)
             ->where('collections.comments.0.resource.title', '被评论的资源')
             ->missing('collections.submissions')

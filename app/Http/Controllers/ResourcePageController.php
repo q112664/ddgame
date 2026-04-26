@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Resource;
 use App\Models\ResourceCategory;
 use App\Support\FrontendCommentSerializer;
+use App\Support\FrontendEmojiSerializer;
 use App\Support\FrontendResourceSerializer;
 use App\Support\ResourceViewRecorder;
 use Illuminate\Http\Request;
@@ -108,6 +109,9 @@ class ResourcePageController extends Controller
 
         return Inertia::render('resources/show', [
             'resource' => $resourcePayload,
+            'commentEmojiPacks' => $section === 'discussion'
+                ? FrontendEmojiSerializer::packs()
+                : [],
             'slug' => $slug,
             'section' => $section,
         ]);

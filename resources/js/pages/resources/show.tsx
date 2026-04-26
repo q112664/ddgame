@@ -46,7 +46,7 @@ import {
     show as showRoute,
 } from '@/routes/resources/index';
 import { store as storeResourceComment } from '@/routes/resources/comments/index';
-import type { Flash, FrontendResource, User } from '@/types';
+import type { Flash, FrontendResource, SiteEmojiPack, User } from '@/types';
 
 type ResourceSection = 'details' | 'downloads' | 'screenshots' | 'discussion';
 
@@ -91,10 +91,12 @@ const sectionMeta: Record<
 
 export default function ResourceShow({
     resource,
+    commentEmojiPacks = [],
     slug,
     section = 'details',
 }: {
     resource: FrontendResource | null;
+    commentEmojiPacks?: SiteEmojiPack[];
     slug: string;
     section?: ResourceSection;
 }) {
@@ -102,6 +104,7 @@ export default function ResourceShow({
         auth: { user: User | null };
         flash: Flash;
         resource: FrontendResource | null;
+        commentEmojiPacks: SiteEmojiPack[];
         slug: string;
         section?: ResourceSection;
     };
@@ -437,6 +440,7 @@ export default function ResourceShow({
                             <CommentThread
                                 comments={resource.comments ?? []}
                                 currentUser={user}
+                                emojiPacks={commentEmojiPacks}
                                 routes={{
                                     store: storeResourceComment.url({
                                         resource: resource.slug,

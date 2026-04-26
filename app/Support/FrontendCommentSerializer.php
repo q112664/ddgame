@@ -24,6 +24,13 @@ class FrontendCommentSerializer
             return [];
         }
 
+        $floorNumbersById = $resource->comments()
+            ->whereNull('parent_id')
+            ->oldest()
+            ->pluck('comments.id')
+            ->values()
+            ->mapWithKeys(fn (int $id, int $index): array => [$id => $index + 1]);
+
         $comments = Comment::query()
             ->where(function ($query) use ($rootIds): void {
                 $query
@@ -50,7 +57,12 @@ class FrontendCommentSerializer
         return $rootIds
             ->map(fn (int $rootId): ?Comment => $commentsById->get($rootId))
             ->filter()
-            ->map(fn (Comment $comment): array => self::rootComment($comment, $repliesByRootId, $commentsById))
+            ->map(fn (Comment $comment): array => self::rootComment(
+                $comment,
+                $repliesByRootId,
+                $commentsById,
+                $floorNumbersById->get($comment->getKey(), 1),
+            ))
             ->values()
             ->all();
     }
@@ -66,7 +78,7 @@ class FrontendCommentSerializer
 
         return [
             'id' => $comment->getKey(),
-            'body' => $comment->body,
+            'body' => SanitizedHtml::cleanComment($comment->body) ?? '',
             'createdAt' => $comment->created_at?->toIso8601String(),
             'parentId' => $comment->parent_id,
             'replyTo' => $comment->parent?->author?->name,
@@ -85,6 +97,7 @@ class FrontendCommentSerializer
         Comment $comment,
         Collection $repliesByRootId,
         Collection $commentsById,
+        int $floorNumber,
     ): array {
         $replies = $repliesByRootId
             ->get($comment->getKey(), collect())
@@ -94,8 +107,9 @@ class FrontendCommentSerializer
 
         return [
             'id' => $comment->getKey(),
-            'body' => $comment->body,
+            'body' => SanitizedHtml::cleanComment($comment->body) ?? '',
             'createdAt' => $comment->created_at?->toIso8601String(),
+            'floorNumber' => $floorNumber,
             'parentId' => $comment->parent_id,
             'replyTo' => $comment->parent_id
                 ? $commentsById->get($comment->parent_id)?->author?->name
@@ -120,8 +134,9 @@ class FrontendCommentSerializer
     {
         return [
             'id' => $comment->getKey(),
-            'body' => $comment->body,
+            'body' => SanitizedHtml::cleanComment($comment->body) ?? '',
             'createdAt' => $comment->created_at?->toIso8601String(),
+            'floorNumber' => null,
             'parentId' => $comment->parent_id,
             'replyTo' => $comment->parent_id
                 ? $commentsById->get($comment->parent_id)?->author?->name
