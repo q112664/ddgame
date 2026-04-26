@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\Comment;
 use App\Models\Resource;
 use App\Models\User;
+use App\Support\FrontendCommentSerializer;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -146,6 +149,7 @@ class ProfileController extends Controller
     private function loadProfileUser(User $user, string $activeTab, bool $isOwnProfile): User
     {
         $user->loadCount([
+            'comments',
             'submittedResources',
             'favoriteResources',
         ]);
@@ -163,6 +167,20 @@ class ProfileController extends Controller
                 'favoriteResources' => fn ($query) => $query
                     ->with(['categories', 'author', 'tags'])
                     ->latest('resource_user_like.created_at'),
+            ]);
+        }
+
+        if ($isOwnProfile && $activeTab === self::TAB_COMMENTS) {
+            $user->load([
+                'comments' => fn ($query) => $query
+                    ->with([
+                        'parent.author',
+                        'commentable' => fn (MorphTo $morphTo) => $morphTo->morphWith([
+                            Resource::class => ['categories', 'author', 'tags'],
+                        ]),
+                    ])
+                    ->latest()
+                    ->limit(50),
             ]);
         }
 
@@ -184,6 +202,12 @@ class ProfileController extends Controller
             self::TAB_FAVORITES => [
                 self::TAB_FAVORITES => $user->favoriteResources
                     ->map(fn (Resource $resource): array => $this->serializeResource($resource))
+                    ->values()
+                    ->all(),
+            ],
+            self::TAB_COMMENTS => [
+                self::TAB_COMMENTS => $user->comments
+                    ->map(fn (Comment $comment): array => FrontendCommentSerializer::profileSummary($comment))
                     ->values()
                     ->all(),
             ],
@@ -212,7 +236,7 @@ class ProfileController extends Controller
                 ],
                 [
                     'label' => '评论数量',
-                    'value' => 0,
+                    'value' => $user->comments_count ?? 0,
                 ],
             ],
             'activeTab' => $activeTab,

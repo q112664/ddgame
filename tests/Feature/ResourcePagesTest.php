@@ -285,6 +285,8 @@ it('renders the resource page header from backend resources', function () {
             ->where('resource.viewCount', 1)
             ->where('resource.favoriteCount', 0)
             ->where('resource.favoritedByCurrentUser', false)
+            ->where('resource.commentCount', 0)
+            ->where('resource.comments', [])
             ->where('section', 'details')
         );
 

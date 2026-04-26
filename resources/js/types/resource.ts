@@ -1,4 +1,5 @@
 import type { ResourceCategoryColor } from '@/lib/resource-category-colors';
+import type { FrontendComment } from './comment';
 
 export type FrontendResourceCategory = {
     name: string;
@@ -19,6 +20,8 @@ export type FrontendResource = {
     content?: string | null;
     favoriteCount?: number;
     favoritedByCurrentUser?: boolean;
+    commentCount?: number;
+    comments?: FrontendComment[];
 };
 
 export type PaginatedResources = {

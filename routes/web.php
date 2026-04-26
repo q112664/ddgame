@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\CommentLikeController;
+use App\Http\Controllers\CommentReplyController;
 use App\Http\Controllers\ResourceCategoryPageController;
+use App\Http\Controllers\ResourceCommentController;
 use App\Http\Controllers\ResourceFavoriteController;
 use App\Http\Controllers\ResourcePageController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +27,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', fn () => to_route('profile.edit'))->name('dashboard');
     Route::post('/resources/{resource}/favorite', ResourceFavoriteController::class)
         ->name('resources.favorite');
+    Route::post('/resources/{resource}/comments', [ResourceCommentController::class, 'store'])
+        ->name('resources.comments.store');
+    Route::post('/comments/{comment}/replies', [CommentReplyController::class, 'store'])
+        ->name('comments.replies.store');
+    Route::post('/comments/{comment}/like', CommentLikeController::class)
+        ->name('comments.like');
 });
 
 require __DIR__.'/settings.php';

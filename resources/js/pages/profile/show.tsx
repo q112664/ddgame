@@ -20,6 +20,7 @@ import {
 import { useInitials } from '@/hooks/use-initials';
 import { buildProfileFavoriteOptimisticProps } from '@/lib/profile-favorite-optimistic';
 import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
+import { formatRelativeTime } from '@/lib/resource-time';
 import { cn } from '@/lib/utils';
 import {
     favorite as favoriteResource,
@@ -30,7 +31,7 @@ import {
     favorites as showUserProfileFavorites,
     show as showUserProfile,
 } from '@/routes/users/index';
-import type { FrontendResource } from '@/types';
+import type { FrontendProfileComment, FrontendResource } from '@/types';
 
 type ProfileSummary = {
     joinedAt: string | null;
@@ -43,7 +44,6 @@ type ProfileStat = {
 };
 
 type ProfileTabKey = 'submissions' | 'favorites' | 'comments';
-type ProfileCollectionKey = 'submissions' | 'favorites';
 
 type ProfileUser = {
     id: number;
@@ -52,9 +52,11 @@ type ProfileUser = {
     signature: string | null;
 };
 
-type ProfileCollections = Partial<
-    Record<ProfileCollectionKey, FrontendResource[]>
->;
+type ProfileCollections = {
+    submissions?: FrontendResource[];
+    favorites?: FrontendResource[];
+    comments?: FrontendProfileComment[];
+};
 
 type ProfileShowPageProps = {
     stats: ProfileStat[];
@@ -80,9 +82,8 @@ const profileTabItems = [
     {
         value: 'comments' as const,
         label: '评论',
-        emptyTitle: '评论功能即将上线',
-        emptyDescription:
-            '这里先预留评论区位置，后续会接入真实评论内容和互动能力。',
+        emptyTitle: '还没有评论内容',
+        emptyDescription: '你在资源讨论区留下的评论会展示在这里。',
     },
 ] satisfies Array<{
     value: ProfileTabKey;
@@ -189,6 +190,78 @@ function ProfileResourceCard({
     );
 }
 
+function formatProfileCommentTime(dateString: string | null): string {
+    if (dateString === null) {
+        return '刚刚';
+    }
+
+    const parsedDate = new Date(dateString);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+        return '刚刚';
+    }
+
+    return formatRelativeTime(new Date(), parsedDate);
+}
+
+function ProfileCommentCard({ comment }: { comment: FrontendProfileComment }) {
+    const resource = comment.resource;
+
+    return (
+        <article className="rounded-xl border border-border bg-card p-4 shadow-xs">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                {resource ? (
+                    <Link
+                        href={showResource({ slug: resource.slug })}
+                        className="relative h-24 w-full shrink-0 overflow-hidden rounded-lg bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none sm:w-36"
+                    >
+                        <img
+                            src={resource.thumbnail}
+                            alt={resource.title}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                        />
+                    </Link>
+                ) : null}
+
+                <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span>{formatProfileCommentTime(comment.createdAt)}</span>
+                        {comment.replyTo ? (
+                            <>
+                                <span>·</span>
+                                <span>回复给 {comment.replyTo}</span>
+                            </>
+                        ) : null}
+                    </div>
+
+                    <p className="break-words text-sm leading-7 text-foreground/88">
+                        {comment.body}
+                    </p>
+
+                    {resource ? (
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            className="px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                        >
+                            <Link href={showResource({ slug: resource.slug })}>
+                                <MessageCircle className="size-4" />
+                                查看资源：{resource.title}
+                            </Link>
+                        </Button>
+                    ) : (
+                        <p className="text-xs text-muted-foreground">
+                            原资源暂不可用
+                        </p>
+                    )}
+                </div>
+            </div>
+        </article>
+    );
+}
+
 const profileSurfaceClass = contentPanelClass;
 
 export default function ProfileShow({
@@ -227,6 +300,8 @@ export default function ProfileShow({
         profileTabItems[0];
     const currentResources =
         currentTab === 'comments' ? [] : (collections[currentTab] ?? []);
+    const currentComments =
+        currentTab === 'comments' ? (collections.comments ?? []) : [];
     const isTabTransitioning = pendingTab !== currentTab;
 
     useEffect(() => {
@@ -420,7 +495,17 @@ export default function ProfileShow({
                         </LayoutGroup>
 
                         <TabsContent value={currentTab} className="mt-0">
-                            {currentResources.length > 0 ? (
+                            {currentTab === 'comments' &&
+                            currentComments.length > 0 ? (
+                                <div className="grid gap-3">
+                                    {currentComments.map((comment) => (
+                                        <ProfileCommentCard
+                                            key={comment.id}
+                                            comment={comment}
+                                        />
+                                    ))}
+                                </div>
+                            ) : currentResources.length > 0 ? (
                                 <div className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-4">
                                     {currentResources.map((resource) => {
                                         const shouldShowFavoriteAction =

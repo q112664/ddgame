@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
 class Resource extends Model
@@ -39,6 +40,10 @@ class Resource extends Model
             if (ResourceSlug::shouldGenerate($resource->slug)) {
                 $resource->slug = ResourceSlug::generateUnique();
             }
+        });
+
+        static::deleting(function (self $resource): void {
+            $resource->comments()->delete();
         });
     }
 
@@ -88,6 +93,11 @@ class Resource extends Model
     {
         return $this->belongsToMany(User::class, 'resource_user_like')
             ->withTimestamps();
+    }
+
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
     }
 
     protected function thumbnailUrl(): Attribute

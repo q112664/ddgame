@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, SunMoon } from 'lucide-react';
 import type { HTMLAttributes } from 'react';
 import type { Appearance } from '@/hooks/use-appearance';
 import { useAppearance } from '@/hooks/use-appearance';
@@ -14,6 +14,7 @@ export default function AppearanceToggleTab({
     const tabs: { value: Appearance; icon: LucideIcon; label: string }[] = [
         { value: 'light', icon: Sun, label: '浅色' },
         { value: 'dark', icon: Moon, label: '深色' },
+        { value: 'system', icon: SunMoon, label: '跟随系统' },
     ];
 
     return (

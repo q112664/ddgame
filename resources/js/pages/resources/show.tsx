@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { CommentThread } from '@/components/comments/comment-thread';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -35,6 +36,8 @@ import { buildResourceFavoriteOptimisticProps } from '@/lib/resource-favorite-op
 import { getResourceCategoryBadgeToneClass } from '@/lib/resource-category-colors';
 import { formatResourceRelativeTime } from '@/lib/resource-time';
 import { home } from '@/routes/index';
+import { like as likeComment } from '@/routes/comments/index';
+import { store as storeCommentReply } from '@/routes/comments/replies/index';
 import {
     discussion as discussionRoute,
     downloads as downloadsRoute,
@@ -42,6 +45,7 @@ import {
     screenshots as screenshotsRoute,
     show as showRoute,
 } from '@/routes/resources/index';
+import { store as storeResourceComment } from '@/routes/resources/comments/index';
 import type { Flash, FrontendResource, User } from '@/types';
 
 type ResourceSection = 'details' | 'downloads' | 'screenshots' | 'discussion';
@@ -126,6 +130,10 @@ export default function ResourceShow({
         notation: 'compact',
         maximumFractionDigits: 1,
     }).format(resource?.viewCount ?? 0);
+    const formattedCommentCount = new Intl.NumberFormat('zh-CN', {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+    }).format(resource?.commentCount ?? 0);
     const favoriteButtonVariant = 'outline';
     const favoriteButtonClass = isFavorited
         ? 'border-[#fb7299]/28 bg-[#fb7299]/8 text-[#e25f8d] shadow-none hover:border-[#fb7299]/38 hover:bg-[#fb7299]/12 hover:text-[#cf4d7d] dark:border-[#fb7299]/24 dark:bg-[#fb7299]/12 dark:text-[#ffb0ca] dark:hover:border-[#fb7299]/32 dark:hover:bg-[#fb7299]/16 dark:hover:text-[#ffc5da]'
@@ -366,7 +374,7 @@ export default function ResourceShow({
                                         </span>
                                         <span className="inline-flex items-center gap-1.5">
                                             <MessageCircle className="size-4" />
-                                            —
+                                            {formattedCommentCount}
                                         </span>
                                     </div>
                                 </div>
@@ -375,97 +383,117 @@ export default function ResourceShow({
                     </div>
                 </article>
 
-                <Tabs value={activeSection} className="gap-4">
-                    <LayoutGroup id="resource-tabs">
-                        <TabsList
-                            className={`w-full justify-start rounded-lg p-0.75 group-data-horizontal/tabs:h-10.5 ${contentPanelStripClass}`}
-                        >
-                            {tabItems.map((item) => (
-                                <TabsTrigger
-                                    key={item.value}
-                                    value={item.value}
-                                    asChild
-                                    className={contentPanelTabsTriggerClass}
-                                >
-                                    <Link
-                                        href={item.href}
-                                        prefetch={['hover', 'click']}
-                                        onMouseDown={() =>
-                                            setActiveSection(item.value)
-                                        }
-                                        onTouchStart={() =>
-                                            setActiveSection(item.value)
-                                        }
-                                        onClick={() =>
-                                            setActiveSection(item.value)
-                                        }
+                <div className="space-y-5">
+                    <Tabs value={activeSection} className="gap-4">
+                        <LayoutGroup id="resource-tabs">
+                            <TabsList
+                                className={`w-full justify-start rounded-lg p-0.75 group-data-horizontal/tabs:h-10.5 ${contentPanelStripClass}`}
+                            >
+                                {tabItems.map((item) => (
+                                    <TabsTrigger
+                                        key={item.value}
+                                        value={item.value}
+                                        asChild
+                                        className={contentPanelTabsTriggerClass}
                                     >
-                                        {activeSection === item.value ? (
-                                            <motion.span
-                                                layoutId="resource-tabs-active-pill"
-                                                className="pointer-events-none absolute inset-0 rounded-md bg-primary/10 dark:bg-primary/14"
-                                                transition={{
-                                                    bounce: 0.14,
-                                                    duration: 0.2,
-                                                    ease: 'easeOut',
-                                                }}
-                                            />
-                                        ) : null}
+                                        <Link
+                                            href={item.href}
+                                            prefetch={['hover', 'click']}
+                                            onMouseDown={() =>
+                                                setActiveSection(item.value)
+                                            }
+                                            onTouchStart={() =>
+                                                setActiveSection(item.value)
+                                            }
+                                            onClick={() =>
+                                                setActiveSection(item.value)
+                                            }
+                                        >
+                                            {activeSection === item.value ? (
+                                                <motion.span
+                                                    layoutId="resource-tabs-active-pill"
+                                                    className="pointer-events-none absolute inset-0 rounded-md bg-primary/10 dark:bg-primary/14"
+                                                    transition={{
+                                                        bounce: 0.14,
+                                                        duration: 0.2,
+                                                        ease: 'easeOut',
+                                                    }}
+                                                />
+                                            ) : null}
 
-                                        <span className="relative z-10 inline-flex items-center gap-1.5">
-                                            <item.icon className="size-4" />
-                                            {item.label}
-                                        </span>
-                                    </Link>
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </LayoutGroup>
-                </Tabs>
+                                            <span className="relative z-10 inline-flex items-center gap-1.5">
+                                                <item.icon className="size-4" />
+                                                {item.label}
+                                            </span>
+                                        </Link>
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+                        </LayoutGroup>
+                    </Tabs>
 
-                <article className={`${contentPanelClass} p-6 sm:p-8`}>
-                    {currentSection === 'details' ? (
-                        <div className="space-y-5">
-                            {resource.content ? (
-                                <div
-                                    className="text-sm leading-7 text-foreground/90 [&_a]:font-medium [&_a]:text-primary [&_a]:underline-offset-4 hover:[&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:tracking-tight [&_hr]:my-6 [&_hr]:border-border [&_li]:leading-7 [&_ol]:ml-6 [&_ol]:list-decimal [&_p]:text-muted-foreground [&_p:not(:last-child)]:mb-4 [&_strong]:font-semibold [&_ul]:ml-6 [&_ul]:list-disc"
-                                    dangerouslySetInnerHTML={{
-                                        __html: resource.content,
-                                    }}
-                                />
-                            ) : (
-                                <p className="text-sm leading-6 text-muted-foreground">
-                                    暂未填写资源详情内容，后续可以在后台补充介绍、参数信息或补充说明。
-                                </p>
-                            )}
+                    <article className={`${contentPanelClass} p-4 sm:p-6`}>
+                        {currentSection === 'discussion' ? (
+                            <CommentThread
+                                comments={resource.comments ?? []}
+                                currentUser={user}
+                                routes={{
+                                    store: storeResourceComment.url({
+                                        resource: resource.slug,
+                                    }),
+                                    reply: (commentId) =>
+                                        storeCommentReply.url({
+                                            comment: commentId,
+                                        }),
+                                    like: (commentId) =>
+                                        likeComment.url({
+                                            comment: commentId,
+                                        }),
+                                }}
+                            />
+                        ) : currentSection === 'details' ? (
+                            <div className="space-y-5">
+                                {resource.content ? (
+                                    <div
+                                        className="text-sm leading-7 text-foreground/90 [&_a]:font-medium [&_a]:text-primary [&_a]:underline-offset-4 hover:[&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:tracking-tight [&_hr]:my-6 [&_hr]:border-border [&_li]:leading-7 [&_ol]:ml-6 [&_ol]:list-decimal [&_p]:text-muted-foreground [&_p:not(:last-child)]:mb-4 [&_strong]:font-semibold [&_ul]:ml-6 [&_ul]:list-disc"
+                                        dangerouslySetInnerHTML={{
+                                            __html: resource.content,
+                                        }}
+                                    />
+                                ) : (
+                                    <p className="text-sm leading-6 text-muted-foreground">
+                                        暂未填写资源详情内容，后续可以在后台补充介绍、参数信息或补充说明。
+                                    </p>
+                                )}
 
-                            {resource.tags.length > 0 ? (
-                                <div
-                                    className={`space-y-3 border-t pt-5 ${contentPanelDividerClass}`}
-                                >
-                                    <h3 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
-                                        标签
-                                    </h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {resource.tags.map((tag) => (
-                                            <Badge
-                                                key={tag}
-                                                variant="outline"
-                                                className={`h-7 rounded-full border px-2.5 text-[13px] font-medium ${detailTagToneClass}`}
-                                            >
-                                                {tag}
-                                            </Badge>
-                                        ))}
+                                {resource.tags.length > 0 ? (
+                                    <div
+                                        className={`space-y-3 border-t pt-5 ${contentPanelDividerClass}`}
+                                    >
+                                        <h3 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
+                                            标签
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {resource.tags.map((tag) => (
+                                                <Badge
+                                                    key={tag}
+                                                    variant="outline"
+                                                    className={`h-7 rounded-full border px-2.5 text-[13px] font-medium ${detailTagToneClass}`}
+                                                >
+                                                    {tag}
+                                                </Badge>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ) : null}
-                        </div>
-                    ) : (
-                        <p className="text-sm leading-6 text-muted-foreground">
-                            {sectionMeta[currentSection].description}
-                        </p>
-                    )}
-                </article>
+                                ) : null}
+                            </div>
+                        ) : (
+                            <p className="text-sm leading-6 text-muted-foreground">
+                                {sectionMeta[currentSection].description}
+                            </p>
+                        )}
+                    </article>
+                </div>
             </div>
         </>
     );

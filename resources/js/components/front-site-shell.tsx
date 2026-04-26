@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ArrowRight, Menu, Moon, Sun, X } from 'lucide-react';
+import { ArrowRight, Menu, Moon, Sun, SunMoon, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -72,15 +72,12 @@ function ThemeToggleButton() {
     const { appearance, updateAppearance } = useAppearance();
 
     const handleToggle = () => {
-        const isDark = document.documentElement.classList.contains('dark');
         const nextAppearance: Appearance =
-            appearance === 'system'
-                ? isDark
-                    ? 'light'
-                    : 'dark'
-                : isDark
-                  ? 'light'
-                  : 'dark';
+            appearance === 'light'
+                ? 'dark'
+                : appearance === 'dark'
+                  ? 'system'
+                  : 'light';
 
         updateAppearance(nextAppearance);
     };
@@ -93,9 +90,15 @@ function ThemeToggleButton() {
             className="relative text-muted-foreground hover:text-foreground"
             onClick={handleToggle}
         >
-            <Sun className="size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-            <Moon className="absolute size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-            <span className="sr-only">切换主题</span>
+            {appearance === 'system' ? (
+                <SunMoon className="size-5" />
+            ) : (
+                <>
+                    <Sun className="size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+                    <Moon className="absolute size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+                </>
+            )}
+            <span className="sr-only">切换主题：当前为{appearance}</span>
         </Button>
     );
 }

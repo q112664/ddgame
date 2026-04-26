@@ -9,8 +9,17 @@ export type UseAppearanceReturn = {
     readonly updateAppearance: (mode: Appearance) => void;
 };
 
+type AppearanceSnapshot = {
+    readonly appearance: Appearance;
+    readonly resolvedAppearance: ResolvedAppearance;
+};
+
 const listeners = new Set<() => void>();
 let currentAppearance: Appearance = 'system';
+let currentSnapshot: AppearanceSnapshot = {
+    appearance: 'system',
+    resolvedAppearance: 'light',
+};
 
 const prefersDark = (): boolean => {
     if (typeof window === 'undefined') {
@@ -34,11 +43,39 @@ const getStoredAppearance = (): Appearance => {
         return 'system';
     }
 
-    return (localStorage.getItem('appearance') as Appearance) || 'system';
+    const storedAppearance = localStorage.getItem('appearance');
+
+    if (
+        storedAppearance === 'light' ||
+        storedAppearance === 'dark' ||
+        storedAppearance === 'system'
+    ) {
+        return storedAppearance;
+    }
+
+    return 'system';
 };
 
 const isDarkMode = (appearance: Appearance): boolean => {
     return appearance === 'dark' || (appearance === 'system' && prefersDark());
+};
+
+const resolveAppearance = (appearance: Appearance): ResolvedAppearance =>
+    isDarkMode(appearance) ? 'dark' : 'light';
+
+const updateSnapshot = (appearance: Appearance): boolean => {
+    const resolvedAppearance = resolveAppearance(appearance);
+    const hasChanged =
+        currentSnapshot.appearance !== appearance ||
+        currentSnapshot.resolvedAppearance !== resolvedAppearance;
+
+    currentAppearance = appearance;
+
+    if (hasChanged) {
+        currentSnapshot = { appearance, resolvedAppearance };
+    }
+
+    return hasChanged;
 };
 
 const disableTransitionsTemporarily = (): (() => void) => {
@@ -99,8 +136,13 @@ const mediaQuery = (): MediaQueryList | null => {
     return window.matchMedia('(prefers-color-scheme: dark)');
 };
 
-const handleSystemThemeChange = (): void =>
+const handleSystemThemeChange = (): void => {
     applyTheme(currentAppearance, { disableTransitions: true });
+
+    if (updateSnapshot(currentAppearance)) {
+        notify();
+    }
+};
 
 export function initializeTheme(): void {
     if (typeof window === 'undefined') {
@@ -112,7 +154,7 @@ export function initializeTheme(): void {
         setCookie('appearance', 'system');
     }
 
-    currentAppearance = getStoredAppearance();
+    updateSnapshot(getStoredAppearance());
     applyTheme(currentAppearance);
 
     // Set up system theme change listener
@@ -120,18 +162,14 @@ export function initializeTheme(): void {
 }
 
 export function useAppearance(): UseAppearanceReturn {
-    const appearance: Appearance = useSyncExternalStore(
+    const { appearance, resolvedAppearance } = useSyncExternalStore(
         subscribe,
-        () => currentAppearance,
-        () => 'system',
+        () => currentSnapshot,
+        () => currentSnapshot,
     );
 
-    const resolvedAppearance: ResolvedAppearance = isDarkMode(appearance)
-        ? 'dark'
-        : 'light';
-
     const updateAppearance = (mode: Appearance): void => {
-        currentAppearance = mode;
+        updateSnapshot(mode);
 
         // Store in localStorage for client-side persistence...
         localStorage.setItem('appearance', mode);

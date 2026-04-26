@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Resource;
 use App\Models\ResourceCategory;
+use App\Support\FrontendCommentSerializer;
 use App\Support\FrontendResourceSerializer;
 use App\Support\ResourceViewRecorder;
 use Illuminate\Http\Request;
@@ -82,7 +83,7 @@ class ResourcePageController extends Controller
     ): Response {
         $resource = Resource::query()
             ->with(['categories', 'author', 'tags'])
-            ->withCount('favoritedByUsers')
+            ->withCount(['comments', 'favoritedByUsers'])
             ->when(
                 $request->user(),
                 fn ($query, $user) => $query->withExists([
@@ -97,8 +98,16 @@ class ResourcePageController extends Controller
             $this->resourceViewRecorder->record($request, $resource);
         }
 
+        $resourcePayload = $resource ? FrontendResourceSerializer::details($resource) : null;
+
+        if ($resourcePayload !== null) {
+            $resourcePayload['comments'] = $section === 'discussion'
+                ? FrontendCommentSerializer::threadForResource($resource, $request->user())
+                : [];
+        }
+
         return Inertia::render('resources/show', [
-            'resource' => $resource ? FrontendResourceSerializer::details($resource) : null,
+            'resource' => $resourcePayload,
             'slug' => $slug,
             'section' => $section,
         ]);

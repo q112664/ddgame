@@ -31,6 +31,10 @@ test('authenticated users can view their profile summary page', function () {
     ]);
     $submittedResource->categories()->attach($category);
     $submittedResource->tags()->attach($tag);
+    $submittedResource->comments()->create([
+        'user_id' => $user->id,
+        'body' => '我在自己的投稿下留了一条评论。',
+    ]);
 
     $favoritedResource = Resource::query()->create([
         'title' => '我的收藏',
@@ -61,7 +65,7 @@ test('authenticated users can view their profile summary page', function () {
             ->where('stats.1.label', '收藏数量')
             ->where('stats.1.value', 1)
             ->where('stats.2.label', '评论数量')
-            ->where('stats.2.value', 0)
+            ->where('stats.2.value', 1)
             ->where('collections.submissions.0.slug', $submittedResource->slug)
             ->where('collections.submissions.0.title', '我的投稿')
             ->where('collections.submissions.0.categories.0.name', '动作')
@@ -94,6 +98,10 @@ test('guests can view another users public profile page', function () {
     ]);
     $submittedResource->categories()->attach($category);
     $submittedResource->tags()->attach($tag);
+    $submittedResource->comments()->create([
+        'user_id' => $profileOwner->id,
+        'body' => '公开页只展示评论数量。',
+    ]);
 
     $favoritedResource = Resource::query()->create([
         'title' => 'Sinon 的收藏',
@@ -119,7 +127,7 @@ test('guests can view another users public profile page', function () {
             ->where('availableTabs', ['submissions'])
             ->where('stats.0.value', 1)
             ->where('stats.1.value', 1)
-            ->where('stats.2.value', 0)
+            ->where('stats.2.value', 1)
             ->where('collections.submissions.0.slug', $submittedResource->slug)
             ->where('collections.submissions.0.title', 'Sinon 的投稿')
             ->missing('collections.favorites'),
@@ -189,8 +197,19 @@ test('authenticated users can view their favorites tab on the unified profile pa
         );
 });
 
-test('authenticated users can view their comments tab placeholder on the unified profile page', function () {
+test('authenticated users can view their comments tab on the unified profile page', function () {
     $user = User::factory()->create();
+    $resource = Resource::query()->create([
+        'title' => '被评论的资源',
+        'slug' => Str::random(7),
+        'user_id' => User::factory()->create()->id,
+        'thumbnail_path' => 'https://example.com/commented-resource.jpg',
+        'published_at' => now()->subHour(),
+    ]);
+    $comment = $resource->comments()->create([
+        'user_id' => $user->id,
+        'body' => '这条评论会展示在个人页。',
+    ]);
 
     $this->actingAs($user)
         ->get(route('users.comments', $user))
@@ -201,6 +220,11 @@ test('authenticated users can view their comments tab placeholder on the unified
             ->where('isOwnProfile', true)
             ->where('activeTab', 'comments')
             ->where('availableTabs', ['submissions', 'favorites', 'comments'])
+            ->where('stats.2.value', 1)
+            ->where('collections.comments.0.id', $comment->id)
+            ->where('collections.comments.0.body', '这条评论会展示在个人页。')
+            ->where('collections.comments.0.resource.slug', $resource->slug)
+            ->where('collections.comments.0.resource.title', '被评论的资源')
             ->missing('collections.submissions')
             ->missing('collections.favorites'),
         );
